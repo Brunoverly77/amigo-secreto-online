@@ -190,6 +190,47 @@ body {
   50%      { opacity: .55; }
 }
 
+/* ----------------------------------- vilarejo no pe da pagina -------- */
+.vilarejo {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 200px;
+  z-index: -1;
+  pointer-events: none;
+  line-height: 0;
+}
+
+.vilarejo svg { width: 100%; height: 100%; display: block; }
+
+/* a luz quente das janelas, com um tremeluzir bem de leve */
+.vilarejo .janela {
+  filter: drop-shadow(0 0 7px rgba(255, 190, 100, .75));
+  animation: janela-brilha 6s ease-in-out infinite;
+  animation-delay: var(--atraso, 0s);
+}
+
+@keyframes janela-brilha {
+  0%, 100% { opacity: 1; }
+  45%      { opacity: .74; }
+}
+
+/* fumaca subindo da chamine e se desfazendo */
+.vilarejo .fumaca circle {
+  animation: fumaca-sobe 5.5s ease-out infinite;
+}
+
+.vilarejo .fumaca circle:nth-child(1) { animation-delay: calc(var(--atraso, 0s) + 0s); }
+.vilarejo .fumaca circle:nth-child(2) { animation-delay: calc(var(--atraso, 0s) + 1.8s); }
+.vilarejo .fumaca circle:nth-child(3) { animation-delay: calc(var(--atraso, 0s) + 3.6s); }
+
+@keyframes fumaca-sobe {
+  0%   { transform: translate(0, 0) scale(.3); opacity: 0; }
+  15%  { opacity: .32; }
+  100% { transform: translate(-16px, -58px) scale(1.9); opacity: 0; }
+}
+
 /* --------------------------------- presentes jogados do treno -------- */
 .presentes-caindo {
   position: fixed;
@@ -203,19 +244,39 @@ body {
   position: absolute;
   will-change: transform, opacity;
   filter: drop-shadow(0 3px 6px rgba(2, 8, 18, .5));
-  animation: presente-cai var(--tempo, 3.6s) cubic-bezier(.4, 0, .85, .55) forwards;
+  animation: presente-cai var(--tempo, 3.6s) forwards;
 }
 
-/* Cai acelerando, como se tivesse peso, girando e sumindo no fim.
-   IMPORTANTE: so o 0% e o 100% mexem na posicao. Se houvesse um ponto
-   intermediario mexendo nela, o navegador aplicaria a curva de aceleracao
-   em cada trecho separado e o presente travaria no meio da queda.
-   Os pontos de 6% e 78% mexem so na transparencia, que nao atrapalha. */
+/* quando a pilha enche, o mais antigo some devagar */
+.presente-caindo.sumindo {
+  transition: opacity .9s ease, transform .9s ease;
+  opacity: 0;
+  transform: translate(var(--desvio), var(--queda)) rotate(var(--giro)) scale(.5);
+}
+
+/* Cai acelerando como se tivesse peso, bate na neve, quica de leve e fica
+   deitado la. Cada trecho tem a sua propria curva de tempo, definida no
+   proprio quadro: se eu deixasse uma curva so para tudo, o navegador
+   reiniciava a aceleracao em cada ponto e o presente travava no meio. */
 @keyframes presente-cai {
-  0%   { transform: translate(0, 0) rotate(0deg) scale(.7); opacity: 0; }
-  6%   { opacity: 1; }
-  78%  { opacity: 1; }
-  100% { transform: translate(var(--desvio), var(--queda)) rotate(var(--giro)) scale(.95); opacity: 0; }
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(.7);
+    opacity: 0;
+    animation-timing-function: cubic-bezier(.45, 0, .9, .5);   /* gravidade */
+  }
+  6%  { opacity: 1; }
+  80% {
+    transform: translate(var(--desvio), var(--queda)) rotate(var(--giro)) scale(1);
+    animation-timing-function: ease-out;                        /* quica */
+  }
+  89% {
+    transform: translate(var(--desvio), calc(var(--queda) - 16px)) rotate(calc(var(--giro) + 10deg));
+    animation-timing-function: ease-in;                         /* volta */
+  }
+  100% {
+    transform: translate(var(--desvio), var(--queda)) rotate(calc(var(--giro) + 5deg)) scale(1);
+    opacity: 1;
+  }
 }
 
 /* ------------------------------------- renas galopando --------------- */

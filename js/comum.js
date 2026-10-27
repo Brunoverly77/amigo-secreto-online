@@ -61,6 +61,99 @@ function cairNeve(quantidade) {
   document.body.appendChild(caixa);
 }
 
+/* ------------------------------------------------- vilarejo ---------- */
+/* Casinhas com janela acesa, fumaca saindo da chamine e pinheiros, no pe
+   da pagina. Tudo desenhado em SVG, sem imagem. */
+function montarVilarejo() {
+  const C = {
+    parede: "#17293f",
+    telhado: "#22364f",
+    neve: "#dde8f6",
+    janela: "#ffcf7a",
+    porta: "#2a1a12",
+    pinheiro: "#13342a",
+    chao: "#141f31"
+  };
+
+  /* uma casa: corpo, telhado nevado, chamine, janelas acesas e porta */
+  const casa = (x, base, larg, alt, atraso) => {
+    const metade = larg / 2;
+    const picoY = -alt * 0.55;
+    return `
+    <g transform="translate(${x} ${base})">
+      <rect x="0" y="${-alt}" width="${larg}" height="${alt}" fill="${C.parede}"/>
+      <path d="M${-larg * 0.12} ${-alt} L${metade} ${-alt + picoY} L${larg * 1.12} ${-alt} Z"
+            fill="${C.telhado}"/>
+      <path d="M${-larg * 0.12} ${-alt} L${metade} ${-alt + picoY} L${larg * 1.12} ${-alt}
+               L${larg * 1.0} ${-alt} Q${metade + larg * 0.18} ${-alt + picoY * 0.45} ${metade} ${-alt + picoY * 0.82}
+               Q${metade - larg * 0.18} ${-alt + picoY * 0.45} ${larg * 0.0} ${-alt} Z"
+            fill="${C.neve}" opacity=".92"/>
+      <rect x="${larg * 0.66}" y="${-alt + picoY * 0.5}" width="${larg * 0.14}" height="${alt * 0.42}" fill="${C.parede}"/>
+      <rect x="${larg * 0.63}" y="${-alt + picoY * 0.5 - 5}" width="${larg * 0.2}" height="6" rx="2" fill="${C.neve}"/>
+      <g class="fumaca" style="--atraso:${atraso}s">
+        <circle cx="${larg * 0.73}" cy="${-alt + picoY * 0.5 - 8}" r="5" fill="#cdd9ea" opacity="0"/>
+        <circle cx="${larg * 0.73}" cy="${-alt + picoY * 0.5 - 8}" r="6" fill="#cdd9ea" opacity="0"/>
+        <circle cx="${larg * 0.73}" cy="${-alt + picoY * 0.5 - 8}" r="4" fill="#cdd9ea" opacity="0"/>
+      </g>
+      <g class="janela" style="--atraso:${atraso * 1.7}s">
+        <rect x="${larg * 0.12}" y="${-alt * 0.72}" width="${larg * 0.22}" height="${alt * 0.3}" rx="2" fill="${C.janela}"/>
+        <rect x="${larg * 0.56}" y="${-alt * 0.72}" width="${larg * 0.22}" height="${alt * 0.3}" rx="2" fill="${C.janela}"/>
+      </g>
+      <rect x="${larg * 0.38}" y="${-alt * 0.46}" width="${larg * 0.24}" height="${alt * 0.46}" rx="2" fill="${C.porta}"/>
+      <circle cx="${larg * 0.5}" cy="${-alt * 0.52}" r="3.5" fill="#c0252f" opacity=".85"/>
+    </g>`;
+  };
+
+  /* pinheiro nevado */
+  const pinheiro = (x, base, h) => `
+    <g transform="translate(${x} ${base})">
+      <rect x="-3" y="${-h * 0.16}" width="6" height="${h * 0.16}" fill="#2a1a12"/>
+      <path d="M0 ${-h} L${h * 0.3} ${-h * 0.52} L${-h * 0.3} ${-h * 0.52} Z" fill="${C.pinheiro}"/>
+      <path d="M0 ${-h * 0.78} L${h * 0.38} ${-h * 0.16} L${-h * 0.38} ${-h * 0.16} Z" fill="${C.pinheiro}"/>
+      <path d="M0 ${-h} L${h * 0.14} ${-h * 0.73} L${-h * 0.14} ${-h * 0.73} Z" fill="${C.neve}" opacity=".75"/>
+      <path d="M0 ${-h * 0.78} L${h * 0.2} ${-h * 0.45} L${-h * 0.2} ${-h * 0.45} Z" fill="${C.neve}" opacity=".55"/>
+    </g>`;
+
+  const caixa = document.createElement("div");
+  caixa.className = "vilarejo";
+  caixa.setAttribute("aria-hidden", "true");
+
+  /* A viewBox e mais larga que qualquer tela (1900) para o desenho nunca
+     ser ampliado: assim as casas ficam no tamanho certo e o que sobra e
+     cortado nas laterais, como um vilarejo que continua alem da tela. */
+  caixa.innerHTML = `
+    <svg viewBox="0 0 1900 200" preserveAspectRatio="xMidYMax slice">
+      <!-- lombada de neve no chao -->
+      <path d="M0 166 Q210 154 420 162 Q660 171 900 156 Q1150 142 1390 160
+               Q1600 172 1900 158 L1900 200 L0 200 Z" fill="${C.chao}"/>
+      <path d="M0 166 Q210 154 420 162 Q660 171 900 156 Q1150 142 1390 160
+               Q1600 172 1900 158"
+            stroke="#93abcb" stroke-width="2.5" fill="none" opacity=".3"/>
+
+      ${pinheiro(58, 164, 62)}
+      ${casa(116, 163, 88, 54, 0)}
+      ${pinheiro(238, 162, 46)}
+      ${casa(288, 161, 106, 66, 1.3)}
+      ${pinheiro(428, 160, 54)}
+      ${casa(484, 159, 80, 50, 2.6)}
+      ${casa(598, 161, 116, 72, 0.7)}
+      ${pinheiro(748, 158, 68)}
+      ${casa(804, 159, 94, 58, 1.9)}
+      ${pinheiro(928, 157, 50)}
+      ${casa(978, 158, 100, 62, 2.2)}
+      ${pinheiro(1108, 160, 64)}
+      ${casa(1166, 159, 86, 52, 1.1)}
+      ${pinheiro(1286, 161, 48)}
+      ${casa(1336, 160, 110, 68, 2.9)}
+      ${pinheiro(1478, 158, 58)}
+      ${casa(1536, 158, 92, 56, 0.4)}
+      ${pinheiro(1676, 159, 52)}
+      ${casa(1726, 159, 98, 60, 1.6)}
+    </svg>`;
+
+  document.body.appendChild(caixa);
+}
+
 /* ------------------------------------------- papai noel no treno ---- */
 /* Desenhado a mao em SVG: tres renas, as redeas, o treno e o Papai Noel.
    Atravessa o ceu a cada ~58 segundos, atras de todo o conteudo. */
@@ -247,6 +340,8 @@ function jogarPresentes() {
   ceu.setAttribute("aria-hidden", "true");
   document.body.appendChild(ceu);
 
+  const MAXIMO_NA_NEVE = 14;
+
   const PARES = [
     ["#c0252f", "#e3bd66"],
     ["#1f6b4d", "#f6dca2"],
@@ -267,14 +362,19 @@ function jogarPresentes() {
     const [papel, fita] = PARES[Math.floor(Math.random() * PARES.length)];
     const tamanho = 30 + Math.random() * 18;
 
+    /* Pousa com a base do presente na linha da neve (uns 36px do pe da
+       pagina), com uma variacao para nao ficarem todos numa regua. */
+    const chao = window.innerHeight - 36 - tamanho + (Math.random() * 36 - 12);
+    const queda = Math.max(60, chao - caixa.top);
+
     const presente = document.createElement("div");
     presente.className = "presente-caindo";
     presente.style.left = caixa.left - tamanho / 2 + "px";
     presente.style.top = caixa.top + "px";
-    presente.style.setProperty("--desvio", (Math.random() * 90 - 35).toFixed(0) + "px");
-    presente.style.setProperty("--queda", (45 + Math.random() * 35).toFixed(0) + "vh");
+    presente.style.setProperty("--desvio", (Math.random() * 120 - 50).toFixed(0) + "px");
+    presente.style.setProperty("--queda", queda.toFixed(0) + "px");
     presente.style.setProperty("--giro", (Math.random() * 720 - 360).toFixed(0) + "deg");
-    presente.style.setProperty("--tempo", (3.2 + Math.random() * 1.8).toFixed(1) + "s");
+    presente.style.setProperty("--tempo", (2.6 + Math.random() * 1.4).toFixed(1) + "s");
 
     presente.innerHTML = `
       <svg viewBox="0 0 24 24" width="${tamanho}" height="${tamanho}">
@@ -286,8 +386,27 @@ function jogarPresentes() {
       </svg>`;
 
     ceu.appendChild(presente);
-    presente.addEventListener("animationend", () => presente.remove());
+
+    /* Os presentes ficam na neve em vez de sumir. Para a pagina nao ir
+       acumulando elementos para sempre, a pilha tem teto: ao passar do
+       limite, o mais antigo se apaga devagar e sai. */
+    const pilha = ceu.querySelectorAll(".presente-caindo:not(.sumindo)");
+    if (pilha.length > MAXIMO_NA_NEVE) {
+      const velho = pilha[0];
+      velho.classList.add("sumindo");
+      setTimeout(() => velho.remove(), 1000);
+    }
   }
+
+  /* se a janela mudar de tamanho, a linha da neve muda de lugar e os
+     presentes ficariam boiando no ar: limpa a pilha */
+  let redimensionando = null;
+  window.addEventListener("resize", () => {
+    clearTimeout(redimensionando);
+    redimensionando = setTimeout(() => {
+      ceu.querySelectorAll(".presente-caindo").forEach((p) => p.remove());
+    }, 250);
+  });
 
   /* Amarra a soltura ao braco: a cada volta da animacao do arremesso,
      espera chegar no instante em que a mao se abre (58% do ciclo) e solta
@@ -464,6 +583,7 @@ document.addEventListener("keydown", (ev) => {
 });
 
 /* ------------------------------------------------------- enfeites ---- */
+montarVilarejo();
 cairNeve(34);
 pendurarGuirlanda(26);
 soltarPapaiNoel();
