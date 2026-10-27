@@ -132,25 +132,22 @@ function montarVilarejo() {
                Q1600 172 1900 158"
             stroke="#93abcb" stroke-width="2.5" fill="none" opacity=".3"/>
 
-      ${pinheiro(58, 164, 62)}
-      ${casa(116, 163, 88, 54, 0)}
-      ${pinheiro(238, 162, 46)}
-      ${casa(288, 161, 106, 66, 1.3)}
-      ${pinheiro(428, 160, 54)}
-      ${casa(484, 159, 80, 50, 2.6)}
-      ${casa(598, 161, 116, 72, 0.7)}
-      ${pinheiro(748, 158, 68)}
-      ${casa(804, 159, 94, 58, 1.9)}
-      ${pinheiro(928, 157, 50)}
-      ${casa(978, 158, 100, 62, 2.2)}
-      ${pinheiro(1108, 160, 64)}
-      ${casa(1166, 159, 86, 52, 1.1)}
-      ${pinheiro(1286, 161, 48)}
-      ${casa(1336, 160, 110, 68, 2.9)}
-      ${pinheiro(1478, 158, 58)}
-      ${casa(1536, 158, 92, 56, 0.4)}
-      ${pinheiro(1676, 159, 52)}
-      ${casa(1726, 159, 98, 60, 1.6)}
+      ${pinheiro(70, 164, 62)}
+      ${casa(140, 163, 92, 56, 0)}
+      ${pinheiro(290, 162, 48)}
+      ${pinheiro(346, 160, 66)}
+      ${casa(424, 161, 112, 70, 1.3)}
+      ${pinheiro(596, 159, 54)}
+      ${casa(664, 159, 96, 58, 2.6)}
+      ${pinheiro(812, 158, 70)}
+      ${casa(884, 160, 118, 74, 0.7)}
+      ${pinheiro(1056, 157, 50)}
+      ${casa(1122, 158, 90, 54, 1.9)}
+      ${pinheiro(1268, 160, 64)}
+      ${casa(1340, 159, 106, 66, 2.2)}
+      ${pinheiro(1510, 158, 56)}
+      ${casa(1576, 159, 98, 60, 1.1)}
+      ${pinheiro(1740, 160, 52)}
     </svg>`;
 
   document.body.appendChild(caixa);
@@ -350,18 +347,34 @@ function jogarPresentes() {
     ["#f7f2e8", "#c0252f"]
   ];
 
-  /* Escolhe uma chamine para mirar: entre as tres mais proximas do treno,
-     sorteia uma. Assim a trajetoria fica curta e crivel, mas nao e sempre
-     a mesma casa. */
+  /* Chamines que ja receberam presente nesta rodada. Serve para o Papai
+     Noel nao esquecer nenhuma casa: ele so repete depois de ter passado
+     por todas as que estao na tela. */
+  const jaAtendidas = new Set();
+
   function escolherChamine(xDoTreno) {
-    const perto = [...document.querySelectorAll(".vilarejo .chamine")]
-      .map((c) => c.getBoundingClientRect())
-      .filter((r) => r.left > 10 && r.right < window.innerWidth - 10)
-      .sort((a, b) => Math.abs(a.left - xDoTreno) - Math.abs(b.left - xDoTreno))
+    const naTela = [...document.querySelectorAll(".vilarejo .chamine")]
+      .map((c, i) => ({ i, r: c.getBoundingClientRect() }))
+      .filter((c) => c.r.left > 6 && c.r.right < window.innerWidth - 6);
+
+    if (!naTela.length) return null;
+
+    /* fechou a rodada: todas ja receberam, comeca de novo */
+    let faltando = naTela.filter((c) => !jaAtendidas.has(c.i));
+    if (!faltando.length) {
+      jaAtendidas.clear();
+      faltando = naTela;
+    }
+
+    /* entre as que ainda nao receberam, pega as 3 mais proximas do treno
+       e sorteia, para o arremesso ser curto sem ficar previsivel */
+    const perto = faltando
+      .sort((a, b) => Math.abs(a.r.left - xDoTreno) - Math.abs(b.r.left - xDoTreno))
       .slice(0, 3);
 
-    if (!perto.length) return null;
-    return perto[Math.floor(Math.random() * perto.length)];
+    const escolhida = perto[Math.floor(Math.random() * perto.length)];
+    jaAtendidas.add(escolhida.i);
+    return escolhida.r;
   }
 
   /* baforada de luz quando o presente entra na chamine */
