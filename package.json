@@ -1,0 +1,21 @@
+{
+  "name": "amigo-secreto-online",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Amigo secreto pelo celular: cada um entra com o proprio nome, o sorteio roda no servidor e so voce ve quem tirou.",
+  "scripts": {
+    "build": "node build.js",
+    "start": "node servidor.js",
+    "dev": "node servidor.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "keywords": [
+    "amigo-secreto",
+    "natal",
+    "supabase",
+    "sorteio"
+  ],
+  "license": "MIT"
+}

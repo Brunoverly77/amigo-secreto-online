@@ -1,0 +1,963 @@
+/* =====================================================================
+   AMIGO SECRETO DE NATAL — folha de estilo
+   Paleta: noite de inverno (azul profundo), pinheiro, dourado e cereja.
+   ===================================================================== */
+
+:root {
+  --noite-1: #0a1a2f;
+  --noite-2: #071324;
+  --noite-3: #040c18;
+
+  --pinheiro: #0f3d2e;
+  --pinheiro-claro: #16553f;
+  --pinheiro-borda: rgba(212, 175, 84, 0.28);
+
+  --cereja: #c0252f;
+  --cereja-claro: #e0353f;
+  --cereja-escuro: #8e1a22;
+
+  --ouro: #e3bd66;
+  --ouro-claro: #f6dca2;
+  --ouro-fosco: rgba(227, 189, 102, 0.14);
+
+  --neve: #f4f8ff;
+  --neve-suave: rgba(244, 248, 255, 0.72);
+  --neve-fraca: rgba(244, 248, 255, 0.45);
+
+  --menta: #6ddba0;
+
+  --raio: 20px;
+  --raio-p: 12px;
+  --sombra: 0 18px 44px rgba(2, 8, 18, 0.55);
+  --sombra-suave: 0 8px 22px rgba(2, 8, 18, 0.35);
+
+  --fonte-titulo: "Playfair Display", Georgia, serif;
+  --fonte-texto: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  font-family: var(--fonte-texto);
+  color: var(--neve);
+  background: var(--noite-2);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ------------------------------------------------- céu, estrelas, neve */
+.ceu {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(1200px 700px at 50% -15%, #15375c 0%, transparent 60%),
+    radial-gradient(800px 500px at 85% 10%, rgba(192, 37, 47, 0.18) 0%, transparent 65%),
+    linear-gradient(180deg, var(--noite-1) 0%, var(--noite-2) 45%, var(--noite-3) 100%);
+}
+
+/* brilho de estrelas feito com gradientes, sem imagem nenhuma */
+.ceu::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1.6px 1.6px at 12% 18%, rgba(255,255,255,.85) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 28% 8%,  rgba(255,255,255,.60) 50%, transparent 51%),
+    radial-gradient(1.8px 1.8px at 44% 24%, rgba(255,255,255,.75) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 61% 11%, rgba(255,255,255,.55) 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 76% 21%, rgba(255,255,255,.80) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 90% 6%,  rgba(255,255,255,.55) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 7% 36%,  rgba(255,255,255,.50) 50%, transparent 51%),
+    radial-gradient(1.4px 1.4px at 34% 42%, rgba(255,255,255,.45) 50%, transparent 51%),
+    radial-gradient(1.2px 1.2px at 68% 38%, rgba(255,255,255,.40) 50%, transparent 51%),
+    radial-gradient(1.6px 1.6px at 95% 33%, rgba(255,255,255,.55) 50%, transparent 51%);
+  animation: brilhar 5.5s ease-in-out infinite alternate;
+}
+
+@keyframes brilhar {
+  from { opacity: .55; }
+  to   { opacity: 1; }
+}
+
+/* montanhas nevadas no pé da página */
+.ceu::after {
+  content: "";
+  position: absolute;
+  left: -5%;
+  right: -5%;
+  bottom: 0;
+  height: 26vh;
+  background: var(--noite-3);
+  clip-path: polygon(0% 100%, 0% 56%, 12% 22%, 24% 52%, 36% 14%, 52% 58%, 66% 28%, 80% 60%, 92% 34%, 100% 62%, 100% 100%);
+  opacity: .85;
+}
+
+.neve {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.floco {
+  position: absolute;
+  top: -8vh;
+  color: #fff;
+  opacity: 0;
+  user-select: none;
+  animation-name: cair;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@keyframes cair {
+  0%   { transform: translate3d(0, -8vh, 0) rotate(0deg);      opacity: 0; }
+  12%  { opacity: var(--op, .8); }
+  88%  { opacity: var(--op, .8); }
+  100% { transform: translate3d(var(--desvio, 14px), 108vh, 0) rotate(240deg); opacity: 0; }
+}
+
+/* ------------------------------------------- papai noel no trenó ------ */
+/* Atravessa o céu de tempos em tempos, atrás de tudo. Sem imagem: e um
+   SVG desenhado a mao, com um brilho quente por tras. */
+.ceu-treno {
+  position: fixed;
+  top: 34vh;
+  left: 0;
+  right: 0;
+  height: 300px;
+  z-index: -1;        /* passa atras dos cartoes, junto com a neve */
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.treno {
+  position: absolute;
+  top: 40px;          /* folga para o balanco nao cortar no topo */
+  left: 0;
+  width: 620px;
+  animation: treno-atravessa 54s linear infinite;  /* 26s em cada sentido */
+}
+
+.treno svg { width: 620px; height: auto; display: block; overflow: visible; }
+
+/* o balanco de subir e descer fica num elemento separado, para nao
+   brigar com o translateX da travessia */
+.treno-balanco {
+  animation: treno-balanca 7s ease-in-out infinite;
+}
+
+/* Vai e volta, sem parar. O scaleX(-1) espelha o desenho inteiro para a
+   volta, assim as renas continuam olhando para onde estao indo. A virada
+   acontece fora da tela, entao ninguem ve ele girar.
+   As medidas em % sao da largura do proprio treno, por isso ele some
+   por completo em qualquer tamanho de tela. */
+@keyframes treno-atravessa {
+  0%   { transform: translateX(-130%) scaleX(1); }
+  48%  { transform: translateX(calc(100vw + 30%)) scaleX(1); }
+  50%  { transform: translateX(calc(100vw + 30%)) scaleX(-1); }
+  98%  { transform: translateX(-130%) scaleX(-1); }
+  100% { transform: translateX(-130%) scaleX(1); }
+}
+
+@keyframes treno-balanca {
+  0%, 100% { transform: translateY(6px) rotate(-1.5deg); }
+  50%      { transform: translateY(-20px) rotate(2deg); }
+}
+
+/* rastro de poeira magica que fica para tras */
+.treno .rastro {
+  animation: rastro-brilha 1.6s ease-in-out infinite;
+}
+
+@keyframes rastro-brilha {
+  0%, 100% { opacity: .25; }
+  50%      { opacity: .75; }
+}
+
+/* o nariz do Rudolph */
+.treno .nariz {
+  animation: nariz-pisca 2.2s ease-in-out infinite;
+}
+
+@keyframes nariz-pisca {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .55; }
+}
+
+/* --------------------------------- presentes jogados do treno -------- */
+.presentes-caindo {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.presente-caindo {
+  position: absolute;
+  will-change: transform, opacity;
+  filter: drop-shadow(0 3px 6px rgba(2, 8, 18, .5));
+  animation: presente-cai var(--tempo, 3.6s) cubic-bezier(.4, 0, .85, .55) forwards;
+}
+
+/* Cai acelerando, como se tivesse peso, girando e sumindo no fim.
+   IMPORTANTE: so o 0% e o 100% mexem na posicao. Se houvesse um ponto
+   intermediario mexendo nela, o navegador aplicaria a curva de aceleracao
+   em cada trecho separado e o presente travaria no meio da queda.
+   Os pontos de 6% e 78% mexem so na transparencia, que nao atrapalha. */
+@keyframes presente-cai {
+  0%   { transform: translate(0, 0) rotate(0deg) scale(.7); opacity: 0; }
+  6%   { opacity: 1; }
+  78%  { opacity: 1; }
+  100% { transform: translate(var(--desvio), var(--queda)) rotate(var(--giro)) scale(.95); opacity: 0; }
+}
+
+/* ------------------------------------- renas galopando --------------- */
+/* Saltinho curto e ritmado, como rena em galope. Cada uma com um atraso
+   diferente, para nao pularem todas iguais. */
+.treno .rena-pula {
+  transform-box: fill-box;
+  transform-origin: 50% 85%;
+  animation: rena-pula .62s ease-in-out infinite;
+}
+
+@keyframes rena-pula {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  35%      { transform: translateY(-5px) rotate(-3deg); }
+  70%      { transform: translateY(1.5px) rotate(1.5deg); }
+}
+
+/* ----------------------------- braco do Papai Noel arremessando ------ */
+.treno .braco-joga {
+  transform-box: view-box;
+  transform-origin: 75px 43px;   /* o ombro dele, em coordenadas do desenho */
+  animation: braco-joga 2.6s ease-in-out infinite;
+}
+
+@keyframes braco-joga {
+  0%, 26% { transform: rotate(0deg); }     /* acenando, parado */
+  42%     { transform: rotate(-44deg); }   /* leva o braco para tras */
+  58%     { transform: rotate(38deg); }    /* arremessa para a frente */
+  72%     { transform: rotate(-6deg); }    /* volta, passando do ponto */
+  100%    { transform: rotate(0deg); }
+}
+
+/* ------------------------------------------------------------ guirlanda */
+.guirlanda {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 26px;
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  z-index: 5;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(15, 61, 46, .95), rgba(15, 61, 46, 0));
+}
+
+.luz {
+  width: 9px;
+  height: 13px;
+  border-radius: 0 0 50% 50% / 0 0 70% 70%;
+  margin-top: 7px;
+  animation: piscar 2.4s ease-in-out infinite;
+}
+
+.luz:nth-child(4n + 1) { background: #ff5d5d; box-shadow: 0 0 10px 2px rgba(255, 93, 93, .7);  animation-delay: 0s;   }
+.luz:nth-child(4n + 2) { background: #ffd978; box-shadow: 0 0 10px 2px rgba(255, 217, 120, .7); animation-delay: .4s;  }
+.luz:nth-child(4n + 3) { background: #6ddba0; box-shadow: 0 0 10px 2px rgba(109, 219, 160, .7); animation-delay: .8s;  }
+.luz:nth-child(4n + 4) { background: #77c4ff; box-shadow: 0 0 10px 2px rgba(119, 196, 255, .7); animation-delay: 1.2s; }
+
+@keyframes piscar {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: .35; }
+}
+
+/* ------------------------------------------------------------- estrutura */
+.pagina {
+  position: relative;
+  min-height: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 54px 16px 64px;
+}
+
+.marca {
+  text-align: center;
+  margin-bottom: 26px;
+}
+
+.marca .arvore {
+  font-size: 46px;
+  line-height: 1;
+  display: block;
+  filter: drop-shadow(0 6px 14px rgba(109, 219, 160, .35));
+  animation: balancar 6s ease-in-out infinite;
+}
+
+@keyframes balancar {
+  0%, 100% { transform: rotate(-3deg); }
+  50%      { transform: rotate(3deg); }
+}
+
+.marca h1 {
+  font-family: var(--fonte-titulo);
+  font-size: clamp(30px, 8.5vw, 42px);
+  line-height: 1.1;
+  margin: 12px 0 6px;
+  background: linear-gradient(135deg, var(--ouro-claro), var(--ouro) 45%, #b98f3c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.marca p {
+  margin: 0;
+  color: var(--neve-suave);
+  font-size: 15px;
+}
+
+/* ---------------------------------------------------------------- cartão */
+.cartao {
+  position: relative;
+  background: linear-gradient(165deg, rgba(22, 85, 63, .92), rgba(15, 61, 46, .95));
+  border: 1px solid var(--pinheiro-borda);
+  border-radius: var(--raio);
+  padding: 22px;
+  box-shadow: var(--sombra);
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+.cartao::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: repeating-linear-gradient(
+    135deg,
+    var(--cereja) 0 10px,
+    var(--neve) 10px 20px
+  );
+  opacity: .9;
+}
+
+.cartao.escuro {
+  background: linear-gradient(165deg, rgba(10, 26, 47, .92), rgba(7, 19, 36, .95));
+  border-color: rgba(227, 189, 102, .2);
+}
+
+.cartao h2 {
+  font-family: var(--fonte-titulo);
+  font-size: 21px;
+  margin: 4px 0 4px;
+  color: var(--ouro-claro);
+}
+
+.cartao .ajuda {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--neve-suave);
+}
+
+/* ---------------------------------------------------------------- campos */
+.campo-grupo { margin-bottom: 14px; }
+
+.campo-grupo label {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ouro);
+  margin-bottom: 7px;
+}
+
+.campo {
+  width: 100%;
+  padding: 14px 15px;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--neve);
+  background: rgba(4, 12, 24, .55);
+  border: 1px solid rgba(244, 248, 255, .16);
+  border-radius: var(--raio-p);
+  outline: none;
+  transition: border-color .18s, box-shadow .18s, background .18s;
+}
+
+.campo::placeholder { color: var(--neve-fraca); }
+
+.campo:focus {
+  border-color: var(--ouro);
+  background: rgba(4, 12, 24, .75);
+  box-shadow: 0 0 0 3px var(--ouro-fosco);
+}
+
+.campo-dupla {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+textarea.campo {
+  resize: vertical;
+  min-height: 78px;
+  line-height: 1.5;
+}
+
+.contador {
+  text-align: right;
+  font-size: 11.5px;
+  color: var(--neve-fraca);
+  margin-top: 5px;
+}
+
+/* --------------------------------------------------------------- botões */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  padding: 15px 18px;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 650;
+  color: #fff;
+  background: linear-gradient(140deg, var(--cereja-claro), var(--cereja) 55%, var(--cereja-escuro));
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: var(--raio-p);
+  cursor: pointer;
+  box-shadow: var(--sombra-suave);
+  transition: transform .14s, filter .18s, box-shadow .18s;
+}
+
+.btn:hover:not(:disabled)  { filter: brightness(1.1); transform: translateY(-1px); }
+.btn:active:not(:disabled) { transform: translateY(1px); }
+
+.btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+  filter: grayscale(.4);
+}
+
+.btn-ouro {
+  background: linear-gradient(140deg, var(--ouro-claro), var(--ouro) 55%, #b98f3c);
+  color: #2a1e05;
+  text-shadow: none;
+}
+
+.btn-fantasma {
+  background: transparent;
+  border: 1px solid rgba(244, 248, 255, .26);
+  color: var(--neve);
+  box-shadow: none;
+  font-weight: 600;
+}
+
+.btn-fantasma:hover:not(:disabled) { background: rgba(244, 248, 255, .07); }
+
+.btn-pequeno {
+  width: auto;
+  padding: 9px 14px;
+  font-size: 13.5px;
+}
+
+.btn-linha {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.separador {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 20px 0;
+  color: var(--neve-fraca);
+  font-size: 12px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
+
+.separador::before,
+.separador::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(227, 189, 102, .4), transparent);
+}
+
+/* --------------------------------------------------------- código da sala */
+.codigo-caixa {
+  text-align: center;
+  padding: 18px;
+  border: 1px dashed rgba(227, 189, 102, .5);
+  border-radius: var(--raio-p);
+  background: rgba(4, 12, 24, .4);
+  margin-bottom: 14px;
+}
+
+.codigo-caixa small {
+  display: block;
+  font-size: 11.5px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--ouro);
+  margin-bottom: 8px;
+}
+
+.codigo {
+  font-family: "Courier New", monospace;
+  font-size: clamp(30px, 10vw, 42px);
+  font-weight: 700;
+  letter-spacing: .22em;
+  color: var(--neve);
+  text-shadow: 0 0 22px rgba(227, 189, 102, .4);
+}
+
+/* ----------------------------------------------------------- informações */
+.faixa-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.etiqueta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  border-radius: 999px;
+  background: rgba(4, 12, 24, .5);
+  border: 1px solid rgba(227, 189, 102, .3);
+  color: var(--ouro-claro);
+}
+
+.etiqueta.menta {
+  border-color: rgba(109, 219, 160, .4);
+  color: var(--menta);
+}
+
+.etiqueta.cereja {
+  border-color: rgba(224, 53, 63, .45);
+  color: #ff9a9f;
+}
+
+/* ------------------------------------------------------------ lista */
+.lista {
+  list-style: none;
+  margin: 0 0 14px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.lista li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 12px 14px;
+  background: rgba(4, 12, 24, .42);
+  border: 1px solid rgba(244, 248, 255, .09);
+  border-radius: var(--raio-p);
+  animation: surgir .28s ease both;
+}
+
+@keyframes surgir {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.lista li.eu {
+  border-color: rgba(227, 189, 102, .55);
+  background: rgba(227, 189, 102, .1);
+}
+
+.lista li.clicavel { cursor: pointer; transition: border-color .16s, background .16s; }
+.lista li.clicavel:hover { border-color: var(--ouro); background: rgba(227, 189, 102, .08); }
+
+.bolinha {
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-size: 15px;
+  font-weight: 700;
+  color: #06121f;
+  background: linear-gradient(140deg, var(--ouro-claro), var(--ouro));
+}
+
+.lista .nome {
+  flex: 1;
+  min-width: 0;
+  font-size: 15.5px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.lista .selo {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(227, 189, 102, .18);
+  color: var(--ouro-claro);
+  white-space: nowrap;
+}
+
+.lista .selo.menta { background: rgba(109, 219, 160, .16); color: var(--menta); }
+.lista .selo.cinza { background: rgba(244, 248, 255, .1);  color: var(--neve-fraca); }
+
+.remover {
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  line-height: 1;
+  color: var(--neve-fraca);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: color .16s, background .16s, border-color .16s;
+}
+
+.remover:hover {
+  color: #ff9a9f;
+  background: rgba(224, 53, 63, .14);
+  border-color: rgba(224, 53, 63, .4);
+}
+
+.vazio {
+  text-align: center;
+  padding: 24px 12px;
+  color: var(--neve-fraca);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.vazio .icone { font-size: 32px; display: block; margin-bottom: 8px; }
+
+/* --------------------------------------------------------------- PIN */
+.pin-linha {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px 0 6px;
+}
+
+.pin-digito {
+  width: 58px;
+  height: 66px;
+  text-align: center;
+  font-family: "Courier New", monospace;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--neve);
+  background: rgba(4, 12, 24, .6);
+  border: 1px solid rgba(244, 248, 255, .18);
+  border-radius: var(--raio-p);
+  outline: none;
+  transition: border-color .16s, box-shadow .16s;
+  -moz-appearance: textfield;
+}
+
+.pin-digito::-webkit-outer-spin-button,
+.pin-digito::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.pin-digito:focus {
+  border-color: var(--ouro);
+  box-shadow: 0 0 0 3px var(--ouro-fosco);
+}
+
+.pin-digito.erro {
+  border-color: var(--cereja-claro);
+  animation: tremer .32s;
+}
+
+@keyframes tremer {
+  0%, 100% { transform: translateX(0); }
+  25%      { transform: translateX(-6px); }
+  75%      { transform: translateX(6px); }
+}
+
+/* --------------------------------------------------------- revelação */
+.presente {
+  text-align: center;
+  padding: 10px 0 4px;
+}
+
+.presente .caixa {
+  font-size: 72px;
+  line-height: 1;
+  display: inline-block;
+  cursor: pointer;
+  animation: pular 1.8s ease-in-out infinite;
+  filter: drop-shadow(0 10px 20px rgba(224, 53, 63, .4));
+}
+
+@keyframes pular {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-9px) scale(1.04); }
+}
+
+.resultado {
+  text-align: center;
+  padding: 6px 0 2px;
+  animation: abrir .5s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+
+@keyframes abrir {
+  from { opacity: 0; transform: scale(.85); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.resultado .rotulo {
+  font-size: 12.5px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ouro);
+  margin-bottom: 10px;
+}
+
+.resultado .sorteado {
+  font-family: var(--fonte-titulo);
+  font-size: clamp(32px, 11vw, 46px);
+  line-height: 1.15;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, var(--ouro-claro), var(--ouro) 50%, #b98f3c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  word-break: break-word;
+}
+
+.dica-balao {
+  position: relative;
+  text-align: left;
+  margin: 16px 0 4px;
+  padding: 15px 16px;
+  background: rgba(4, 12, 24, .5);
+  border: 1px solid rgba(109, 219, 160, .35);
+  border-radius: var(--raio-p);
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--neve);
+}
+
+.dica-balao strong {
+  display: block;
+  font-size: 11.5px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--menta);
+  margin-bottom: 6px;
+}
+
+/* ------------------------------------------------------------- aviso */
+.aviso {
+  display: flex;
+  gap: 11px;
+  padding: 14px;
+  border-radius: var(--raio-p);
+  background: rgba(224, 53, 63, .12);
+  border: 1px solid rgba(224, 53, 63, .35);
+  font-size: 14px;
+  line-height: 1.55;
+  margin-bottom: 16px;
+}
+
+.aviso .icone { font-size: 20px; line-height: 1.3; }
+
+.aviso.ouro {
+  background: rgba(227, 189, 102, .1);
+  border-color: rgba(227, 189, 102, .35);
+}
+
+/* ------------------------------------------------------------- modal */
+.cortina {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(3, 9, 18, .78);
+  backdrop-filter: blur(5px);
+}
+
+.cortina.aberta { display: flex; animation: aparecer .2s ease both; }
+
+@keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+
+.modal {
+  width: 100%;
+  max-width: 420px;
+  background: linear-gradient(165deg, rgba(22, 85, 63, .98), rgba(10, 26, 47, .98));
+  border: 1px solid var(--pinheiro-borda);
+  border-radius: var(--raio);
+  padding: 24px 22px;
+  box-shadow: var(--sombra);
+  animation: subir .26s cubic-bezier(.2, .9, .3, 1.1) both;
+}
+
+@keyframes subir {
+  from { opacity: 0; transform: translateY(18px) scale(.97); }
+  to   { opacity: 1; transform: none; }
+}
+
+.modal h3 {
+  font-family: var(--fonte-titulo);
+  font-size: 20px;
+  margin: 0 0 8px;
+  color: var(--ouro-claro);
+  text-align: center;
+}
+
+.modal .ajuda {
+  margin: 0 0 18px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--neve-suave);
+  text-align: center;
+}
+
+/* -------------------------------------------------------------- aviso flutuante */
+.avisos {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 18px;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.bolha {
+  max-width: 420px;
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 550;
+  border-radius: 999px;
+  background: rgba(7, 19, 36, .96);
+  border: 1px solid rgba(244, 248, 255, .18);
+  box-shadow: var(--sombra);
+  animation: bolha-entra .25s ease both;
+}
+
+.bolha.erro  { border-color: rgba(224, 53, 63, .6);  color: #ffb3b7; }
+.bolha.certo { border-color: rgba(109, 219, 160, .6); color: var(--menta); }
+
+@keyframes bolha-entra {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.bolha.saindo { animation: bolha-sai .25s ease both; }
+
+@keyframes bolha-sai {
+  from { opacity: 1; }
+  to   { opacity: 0; transform: translateY(8px); }
+}
+
+/* ------------------------------------------------------------- rodapé */
+.rodape {
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--neve-fraca);
+  margin-top: 26px;
+  line-height: 1.7;
+}
+
+.rodape a { color: var(--ouro); text-decoration: none; }
+.rodape a:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------ apoio */
+.escondido { display: none !important; }
+
+.centro { text-align: center; }
+
+.carregando {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, .3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: girar .7s linear infinite;
+}
+
+@keyframes girar { to { transform: rotate(360deg); } }
+
+.tela-carregando {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--neve-suave);
+}
+
+.tela-carregando .arvore {
+  font-size: 44px;
+  display: block;
+  margin-bottom: 14px;
+  animation: balancar 2s ease-in-out infinite;
+}
+
+/* ----------------------------------------------- telas pequenas e ajustes */
+/* No celular o cartao ocupa a largura toda, entao no meio da tela o treno
+   ficaria escondido atras dele. Ali ele sobe para a faixa do titulo, que
+   e a unica parte sempre livre. */
+@media (max-width: 760px) {
+  .ceu-treno { height: 180px; top: 2vh; }
+  .treno { width: 420px; top: 30px; }
+  .treno svg { width: 420px; }
+}
+
+@media (max-width: 380px) {
+  .cartao { padding: 18px 16px; }
+  .btn-linha { grid-template-columns: 1fr; }
+  .treno { width: 350px; }
+  .treno svg { width: 350px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+  }
+  .neve { display: none; }
+}
+
+:focus-visible {
+  outline: 2px solid var(--ouro);
+  outline-offset: 2px;
+}

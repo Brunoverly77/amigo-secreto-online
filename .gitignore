@@ -1,0 +1,25 @@
+# =====================================================================
+# As SUAS chaves do Supabase. Este arquivo NUNCA vai para o repositorio.
+# Quem clonar o projeto copia js/config.example.js para ca e poe as
+# chaves do proprio projeto Supabase.
+# Na Vercel, o build.js gera este arquivo a partir das variaveis de
+# ambiente, entao la ele tambem nao precisa estar versionado.
+# =====================================================================
+js/config.js
+
+# dependencias e build
+node_modules/
+.vercel
+
+# sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# editores
+.vscode/
+.idea/
+
+# arquivos temporarios de teste
+__teste*.
+__teste*
