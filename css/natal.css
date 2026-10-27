@@ -305,7 +305,7 @@ body {
 .treno .braco-joga {
   transform-box: view-box;
   transform-origin: 75px 43px;   /* o ombro dele, em coordenadas do desenho */
-  animation: braco-joga 2.6s ease-in-out infinite;
+  animation: braco-joga 1.9s ease-in-out infinite;
 }
 
 @keyframes braco-joga {

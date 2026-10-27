@@ -347,34 +347,59 @@ function jogarPresentes() {
     ["#f7f2e8", "#c0252f"]
   ];
 
-  /* Chamines que ja receberam presente nesta rodada. Serve para o Papai
-     Noel nao esquecer nenhuma casa: ele so repete depois de ter passado
-     por todas as que estao na tela. */
-  const jaAtendidas = new Set();
+  /* ESCOLHA DA CHAMINE
+     Ele entrega na casa que esta passando por cima, ou logo a frente no
+     sentido do voo. Nunca mira para tras e nunca atira longe.
 
-  function escolherChamine(xDoTreno) {
-    const naTela = [...document.querySelectorAll(".vilarejo .chamine")]
-      .map((c, i) => ({ i, r: c.getBoundingClientRect() }))
-      .filter((c) => c.r.left > 6 && c.r.right < window.innerWidth - 6);
+     A versao anterior guardava uma lista de "ja atendidas" e obrigava a
+     escolher uma que ainda nao tivesse recebido. Isso brigava com o
+     movimento: quando as casas por perto ja tinham recebido, ele mirava
+     numa la do comeco da tela e o presente atravessava tudo. Entregar na
+     ordem em que ele passa resolve o problema de cobertura sozinho, e
+     sem arremesso maluco. */
+  const ALCANCE = 340;   /* o mais longe que ele atira, em pixels */
 
-    if (!naTela.length) return null;
+  const servidas = new Set();   /* casas ja atendidas nesta travessia */
+  let direcaoAnterior = 0;
 
-    /* fechou a rodada: todas ja receberam, comeca de novo */
-    let faltando = naTela.filter((c) => !jaAtendidas.has(c.i));
-    if (!faltando.length) {
-      jaAtendidas.clear();
-      faltando = naTela;
+  /* Para que lado o treno esta indo, lido do proprio desenho: na volta
+     ele viaja espelhado (scaleX(-1)), entao o sinal do primeiro valor da
+     matriz ja diz o sentido. Deduzir isso comparando com o arremesso
+     anterior atrasava uma jogada, e na virada ele atirava para tras. */
+  function sentidoDoVoo() {
+    const treno = document.querySelector(".treno");
+    if (!treno) return 1;
+    return new DOMMatrix(getComputedStyle(treno).transform).m11 < 0 ? -1 : 1;
+  }
+
+  function escolherChamine(xMao) {
+    const direcao = sentidoDoVoo();
+
+    /* virou de lado: comeca uma travessia nova, todas as casas de novo */
+    if (direcao !== direcaoAnterior) {
+      servidas.clear();
+      direcaoAnterior = direcao;
     }
 
-    /* entre as que ainda nao receberam, pega as 3 mais proximas do treno
-       e sorteia, para o arremesso ser curto sem ficar previsivel */
-    const perto = faltando
-      .sort((a, b) => Math.abs(a.r.left - xDoTreno) - Math.abs(b.r.left - xDoTreno))
-      .slice(0, 3);
+    const candidatas = [...document.querySelectorAll(".vilarejo .chamine")]
+      .map((c, i) => {
+        const r = c.getBoundingClientRect();
+        return { i, r, centro: r.left + r.width / 2 };
+      })
+      .filter((c) => c.r.left > 6 && c.r.right < window.innerWidth - 6)
+      .map((c) => {
+        const delta = c.centro - xMao;
+        return { ...c, distancia: Math.abs(delta), aFrente: delta * direcao >= -50 };
+      })
+      .filter((c) => c.aFrente && c.distancia <= ALCANCE && !servidas.has(c.i));
 
-    const escolhida = perto[Math.floor(Math.random() * perto.length)];
-    jaAtendidas.add(escolhida.i);
-    return escolhida.r;
+    if (!candidatas.length) return null;
+
+    /* a mais proxima a frente: ele entrega casa por casa, na ordem em
+       que sobrevoa, e nunca repete antes de completar a travessia */
+    candidatas.sort((a, b) => a.distancia - b.distancia);
+    servidas.add(candidatas[0].i);
+    return candidatas[0].r;
   }
 
   /* baforada de luz quando o presente entra na chamine */
@@ -393,8 +418,11 @@ function jogarPresentes() {
 
     const mao = ponto.getBoundingClientRect();
 
-    /* so joga enquanto o treno estiver visivel na tela */
-    if (mao.left < 40 || mao.left > window.innerWidth - 40) return;
+    /* Ele pode jogar com a mao ainda um pouco fora da tela, para alcancar
+       as casas das pontas logo que entra. Nao ha risco de presente vindo
+       do nada: a chamine alvo e sempre visivel, e o alcance limita o
+       arremesso. */
+    if (mao.left < -280 || mao.left > window.innerWidth + 280) return;
 
     const chamine = escolherChamine(mao.left);
     if (!chamine) return;
@@ -443,7 +471,7 @@ function jogarPresentes() {
   const braco = document.querySelector(".treno .braco-joga");
   if (!braco) return;
 
-  const CICLO = 2600;    /* mesma duracao da animacao braco-joga, no CSS */
+  const CICLO = 1900;    /* mesma duracao da animacao braco-joga, no CSS */
   const SOLTURA = 0.58;  /* fracao do ciclo em que ele abre a mao */
 
   function marcarProximoArremesso() {
