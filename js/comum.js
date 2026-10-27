@@ -89,7 +89,9 @@ function montarVilarejo() {
                Q${metade - larg * 0.18} ${-alt + picoY * 0.45} ${larg * 0.0} ${-alt} Z"
             fill="${C.neve}" opacity=".92"/>
       <rect x="${larg * 0.66}" y="${-alt + picoY * 0.5}" width="${larg * 0.14}" height="${alt * 0.42}" fill="${C.parede}"/>
-      <rect x="${larg * 0.63}" y="${-alt + picoY * 0.5 - 5}" width="${larg * 0.2}" height="6" rx="2" fill="${C.neve}"/>
+      <!-- a boca da chamine: e nela que os presentes sao jogados -->
+      <rect class="chamine" x="${larg * 0.63}" y="${-alt + picoY * 0.5 - 5}"
+            width="${larg * 0.2}" height="6" rx="2" fill="${C.neve}"/>
       <g class="fumaca" style="--atraso:${atraso}s">
         <circle cx="${larg * 0.73}" cy="${-alt + picoY * 0.5 - 8}" r="5" fill="#cdd9ea" opacity="0"/>
         <circle cx="${larg * 0.73}" cy="${-alt + picoY * 0.5 - 8}" r="6" fill="#cdd9ea" opacity="0"/>
@@ -340,8 +342,6 @@ function jogarPresentes() {
   ceu.setAttribute("aria-hidden", "true");
   document.body.appendChild(ceu);
 
-  const MAXIMO_NA_NEVE = 14;
-
   const PARES = [
     ["#c0252f", "#e3bd66"],
     ["#1f6b4d", "#f6dca2"],
@@ -350,63 +350,79 @@ function jogarPresentes() {
     ["#f7f2e8", "#c0252f"]
   ];
 
+  /* Escolhe uma chamine para mirar: entre as tres mais proximas do treno,
+     sorteia uma. Assim a trajetoria fica curta e crivel, mas nao e sempre
+     a mesma casa. */
+  function escolherChamine(xDoTreno) {
+    const perto = [...document.querySelectorAll(".vilarejo .chamine")]
+      .map((c) => c.getBoundingClientRect())
+      .filter((r) => r.left > 10 && r.right < window.innerWidth - 10)
+      .sort((a, b) => Math.abs(a.left - xDoTreno) - Math.abs(b.left - xDoTreno))
+      .slice(0, 3);
+
+    if (!perto.length) return null;
+    return perto[Math.floor(Math.random() * perto.length)];
+  }
+
+  /* baforada de luz quando o presente entra na chamine */
+  function baforada(alvo) {
+    const p = document.createElement("div");
+    p.className = "baforada";
+    p.style.left = alvo.left + alvo.width / 2 + "px";
+    p.style.top = alvo.top + "px";
+    ceu.appendChild(p);
+    setTimeout(() => p.remove(), 1200);
+  }
+
   function soltar() {
     const ponto = document.querySelector(".treno .ponto-solta");
     if (!ponto) return;
 
-    const caixa = ponto.getBoundingClientRect();
+    const mao = ponto.getBoundingClientRect();
 
     /* so joga enquanto o treno estiver visivel na tela */
-    if (caixa.left < 40 || caixa.left > window.innerWidth - 40) return;
+    if (mao.left < 40 || mao.left > window.innerWidth - 40) return;
+
+    const chamine = escolherChamine(mao.left);
+    if (!chamine) return;
 
     const [papel, fita] = PARES[Math.floor(Math.random() * PARES.length)];
     const tamanho = 30 + Math.random() * 18;
 
-    /* Pousa com a base do presente na linha da neve (uns 36px do pe da
-       pagina), com uma variacao para nao ficarem todos numa regua. */
-    const chao = window.innerHeight - 36 - tamanho + (Math.random() * 36 - 12);
-    const queda = Math.max(60, chao - caixa.top);
+    /* mira na boca da chamine */
+    const desvio = chamine.left + chamine.width / 2 - mao.left;
+    const queda = chamine.top - mao.top;
+    if (queda < 40) return;   /* chamine acima da mao: nao faz sentido */
+
+    const tempo = 2.2 + Math.random() * 1.1;
 
     const presente = document.createElement("div");
     presente.className = "presente-caindo";
-    presente.style.left = caixa.left - tamanho / 2 + "px";
-    presente.style.top = caixa.top + "px";
-    presente.style.setProperty("--desvio", (Math.random() * 120 - 50).toFixed(0) + "px");
+    presente.style.left = mao.left - tamanho / 2 + "px";
+    presente.style.top = mao.top + "px";
+    presente.style.setProperty("--desvio", desvio.toFixed(0) + "px");
     presente.style.setProperty("--queda", queda.toFixed(0) + "px");
     presente.style.setProperty("--giro", (Math.random() * 720 - 360).toFixed(0) + "deg");
-    presente.style.setProperty("--tempo", (2.6 + Math.random() * 1.4).toFixed(1) + "s");
+    presente.style.setProperty("--tempo", tempo.toFixed(2) + "s");
 
+    /* Dois elementos: o de fora anda na horizontal em velocidade constante,
+       o de dentro cai acelerando. Juntos desenham uma parabola, como um
+       arremesso de verdade. Num elemento so sairia uma reta. */
     presente.innerHTML = `
-      <svg viewBox="0 0 24 24" width="${tamanho}" height="${tamanho}">
-        <path d="M12 9 Q5 2 2.5 5.5 Q4 9 12 9 Z" fill="${fita}"/>
-        <path d="M12 9 Q19 2 21.5 5.5 Q20 9 12 9 Z" fill="${fita}"/>
-        <rect x="2" y="9" width="20" height="13" rx="2" fill="${papel}"/>
-        <rect x="2" y="12.5" width="20" height="3" fill="${fita}"/>
-        <rect x="10" y="9" width="4" height="13" fill="${fita}"/>
-      </svg>`;
+      <div class="presente-corpo">
+        <svg viewBox="0 0 24 24" width="${tamanho}" height="${tamanho}">
+          <path d="M12 9 Q5 2 2.5 5.5 Q4 9 12 9 Z" fill="${fita}"/>
+          <path d="M12 9 Q19 2 21.5 5.5 Q20 9 12 9 Z" fill="${fita}"/>
+          <rect x="2" y="9" width="20" height="13" rx="2" fill="${papel}"/>
+          <rect x="2" y="12.5" width="20" height="3" fill="${fita}"/>
+          <rect x="10" y="9" width="4" height="13" fill="${fita}"/>
+        </svg>
+      </div>`;
 
     ceu.appendChild(presente);
-
-    /* Os presentes ficam na neve em vez de sumir. Para a pagina nao ir
-       acumulando elementos para sempre, a pilha tem teto: ao passar do
-       limite, o mais antigo se apaga devagar e sai. */
-    const pilha = ceu.querySelectorAll(".presente-caindo:not(.sumindo)");
-    if (pilha.length > MAXIMO_NA_NEVE) {
-      const velho = pilha[0];
-      velho.classList.add("sumindo");
-      setTimeout(() => velho.remove(), 1000);
-    }
+    setTimeout(() => baforada(chamine), tempo * 1000);
+    presente.addEventListener("animationend", () => presente.remove());
   }
-
-  /* se a janela mudar de tamanho, a linha da neve muda de lugar e os
-     presentes ficariam boiando no ar: limpa a pilha */
-  let redimensionando = null;
-  window.addEventListener("resize", () => {
-    clearTimeout(redimensionando);
-    redimensionando = setTimeout(() => {
-      ceu.querySelectorAll(".presente-caindo").forEach((p) => p.remove());
-    }, 250);
-  });
 
   /* Amarra a soltura ao braco: a cada volta da animacao do arremesso,
      espera chegar no instante em que a mao se abre (58% do ciclo) e solta

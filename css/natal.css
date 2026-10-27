@@ -240,43 +240,50 @@ body {
   overflow: hidden;
 }
 
+/* O presente e feito de dois elementos encaixados: o de fora anda na
+   horizontal em velocidade constante, o de dentro cai acelerando. A soma
+   dos dois desenha uma parabola, que e como um objeto arremessado se move
+   de verdade. Num elemento so, a trajetoria sairia uma reta diagonal. */
 .presente-caindo {
   position: absolute;
+  will-change: transform;
+  animation: presente-x var(--tempo, 3s) linear forwards;
+}
+
+.presente-corpo {
   will-change: transform, opacity;
   filter: drop-shadow(0 3px 6px rgba(2, 8, 18, .5));
-  animation: presente-cai var(--tempo, 3.6s) forwards;
+  animation: presente-y var(--tempo, 3s) cubic-bezier(.45, 0, .9, .5) forwards;
 }
 
-/* quando a pilha enche, o mais antigo some devagar */
-.presente-caindo.sumindo {
-  transition: opacity .9s ease, transform .9s ease;
-  opacity: 0;
-  transform: translate(var(--desvio), var(--queda)) rotate(var(--giro)) scale(.5);
+@keyframes presente-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(var(--desvio)); }
 }
 
-/* Cai acelerando como se tivesse peso, bate na neve, quica de leve e fica
-   deitado la. Cada trecho tem a sua propria curva de tempo, definida no
-   proprio quadro: se eu deixasse uma curva so para tudo, o navegador
-   reiniciava a aceleracao em cada ponto e o presente travava no meio. */
-@keyframes presente-cai {
-  0% {
-    transform: translate(0, 0) rotate(0deg) scale(.7);
-    opacity: 0;
-    animation-timing-function: cubic-bezier(.45, 0, .9, .5);   /* gravidade */
-  }
-  6%  { opacity: 1; }
-  80% {
-    transform: translate(var(--desvio), var(--queda)) rotate(var(--giro)) scale(1);
-    animation-timing-function: ease-out;                        /* quica */
-  }
-  89% {
-    transform: translate(var(--desvio), calc(var(--queda) - 16px)) rotate(calc(var(--giro) + 10deg));
-    animation-timing-function: ease-in;                         /* volta */
-  }
-  100% {
-    transform: translate(var(--desvio), var(--queda)) rotate(calc(var(--giro) + 5deg)) scale(1);
-    opacity: 1;
-  }
+/* some encolhendo no fim: e o presente entrando pela boca da chamine */
+@keyframes presente-y {
+  0%   { transform: translateY(0) rotate(0deg) scale(.7); opacity: 0; }
+  8%   { opacity: 1; }
+  84%  { opacity: 1; }
+  100% { transform: translateY(var(--queda)) rotate(var(--giro)) scale(.18); opacity: 0; }
+}
+
+/* clarao quentinho na chamine quando o presente entra */
+.baforada {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 214, 140, .95) 0%, rgba(255, 180, 90, .45) 45%, transparent 70%);
+  animation: baforada-estoura 1.1s ease-out forwards;
+}
+
+@keyframes baforada-estoura {
+  0%   { transform: scale(.4); opacity: 0; }
+  25%  { transform: scale(2.6); opacity: 1; }
+  100% { transform: scale(5.5) translateY(-16px); opacity: 0; }
 }
 
 /* ------------------------------------- renas galopando --------------- */
