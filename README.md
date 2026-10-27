@@ -253,17 +253,3 @@ amigo-secreto-online/
 
 Sem dependências: o `package.json` não tem um único pacote. Tudo roda com
 Node puro, e o Supabase entra por CDN direto no HTML.
-
----
-
-## Ideias para depois
-
-- Lista de desejos com 2 ou 3 sugestões por pessoa.
-- Botão "confirmo que está tudo certo", liberando o sorteio só quando todos
-  confirmarem.
-- Transferir o papel de organizador, para o caso de quem criou sumir — hoje,
-  se o organizador perde o celular, a sala fica sem quem sorteie.
-- Restrição de casais, opcional e desligada por padrão.
-- Limpeza automática: apagar salas com alguns meses de idade.
-- Outros jogos na mesma base: sorteio de times, papéis secretos, ordem de
-  tarefas. Todos reusam sala com código + sorteio no servidor.
