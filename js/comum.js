@@ -412,9 +412,10 @@ function jogarPresentes() {
     setTimeout(() => p.remove(), 1200);
   }
 
-  function soltar() {
+  /* Onde esta a mao dele agora, ou null se o treno nao esta na tela */
+  function maoNaTela() {
     const ponto = document.querySelector(".treno .ponto-solta");
-    if (!ponto) return;
+    if (!ponto) return null;
 
     const mao = ponto.getBoundingClientRect();
 
@@ -422,10 +423,16 @@ function jogarPresentes() {
        as casas das pontas logo que entra. Nao ha risco de presente vindo
        do nada: a chamine alvo e sempre visivel, e o alcance limita o
        arremesso. */
-    if (mao.left < -280 || mao.left > window.innerWidth + 280) return;
+    if (mao.left < -280 || mao.left > window.innerWidth + 280) return null;
+    return mao;
+  }
 
-    const chamine = escolherChamine(mao.left);
-    if (!chamine) return;
+  /* Monta o presente e o joga na chamine escolhida. A posicao da mao e
+     relida aqui, no instante do arremesso, porque o braco se moveu desde
+     a hora em que ele mirou. */
+  function lancar(chamine) {
+    const mao = maoNaTela();
+    if (!mao) return;
 
     const [papel, fita] = PARES[Math.floor(Math.random() * PARES.length)];
     const tamanho = 30 + Math.random() * 18;
@@ -465,21 +472,29 @@ function jogarPresentes() {
     presente.addEventListener("animationend", () => presente.remove());
   }
 
-  /* Amarra a soltura ao braco: a cada volta da animacao do arremesso,
-     espera chegar no instante em que a mao se abre (58% do ciclo) e solta
-     o presente dali. Assim o presente sai da mao, nao do nada. */
+  /* O RITMO DA ENTREGA
+     De tempos em tempos ele procura uma casa. Se achar, o braco faz o
+     gesto de arremesso e o presente sai da mao no meio do gesto. Se nao
+     achar nenhuma, ele simplesmente segue acenando - antes o braco
+     arremessava no vazio mesmo sem ter o que entregar. */
   const braco = document.querySelector(".treno .braco-joga");
   if (!braco) return;
 
-  const CICLO = 1900;    /* mesma duracao da animacao braco-joga, no CSS */
-  const SOLTURA = 0.58;  /* fracao do ciclo em que ele abre a mao */
+  const INTERVALO = 1700;   /* de quanto em quanto ele procura uma casa */
+  const GESTO = 1100;       /* duracao de braco-joga, no CSS */
+  const SOLTURA = 0.55;     /* fracao do gesto em que a mao se abre */
 
-  function marcarProximoArremesso() {
-    setTimeout(soltar, CICLO * SOLTURA);
-  }
+  setInterval(() => {
+    const mao = maoNaTela();
+    if (!mao) return;
 
-  braco.addEventListener("animationiteration", marcarProximoArremesso);
-  marcarProximoArremesso();
+    const chamine = escolherChamine(mao.left);
+    if (!chamine) return;          /* nada para entregar: segue acenando */
+
+    braco.classList.add("jogando");
+    setTimeout(() => lancar(chamine), GESTO * SOLTURA);
+    setTimeout(() => braco.classList.remove("jogando"), GESTO + 60);
+  }, INTERVALO);
 }
 
 /* ----------------------------------------------------- guirlanda ---- */

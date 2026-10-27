@@ -302,18 +302,30 @@ body {
 }
 
 /* ----------------------------- braco do Papai Noel arremessando ------ */
+/* Por padrao ele so acena. O arremesso e disparado pelo codigo, uma vez
+   por presente, e so quando existe mesmo uma casa para entregar - senao
+   ele ficava mexendo o braco no vazio. */
 .treno .braco-joga {
   transform-box: view-box;
   transform-origin: 75px 43px;   /* o ombro dele, em coordenadas do desenho */
-  animation: braco-joga 1.9s ease-in-out infinite;
+  animation: braco-acena 3s ease-in-out infinite;
+}
+
+@keyframes braco-acena {
+  0%, 100% { transform: rotate(0deg); }
+  50%      { transform: rotate(-10deg); }
+}
+
+.treno .braco-joga.jogando {
+  animation: braco-joga 1.1s ease-in-out;   /* uma vez, nao em laco */
 }
 
 @keyframes braco-joga {
-  0%, 26% { transform: rotate(0deg); }     /* acenando, parado */
-  42%     { transform: rotate(-44deg); }   /* leva o braco para tras */
-  58%     { transform: rotate(38deg); }    /* arremessa para a frente */
-  72%     { transform: rotate(-6deg); }    /* volta, passando do ponto */
-  100%    { transform: rotate(0deg); }
+  0%   { transform: rotate(0deg); }
+  30%  { transform: rotate(-46deg); }   /* leva o braco para tras */
+  55%  { transform: rotate(40deg); }    /* arremessa para a frente */
+  78%  { transform: rotate(-8deg); }    /* volta, passando do ponto */
+  100% { transform: rotate(0deg); }
 }
 
 /* ------------------------------------------------------------ guirlanda */
@@ -1005,6 +1017,16 @@ textarea.campo {
   .ceu-treno { height: 180px; top: 2vh; }
   .treno { width: 420px; top: 30px; }
   .treno svg { width: 420px; }
+
+  /* O vilarejo e um desenho de 1900 unidades de largura e nunca e
+     ampliado, so cortado. Numa tela estreita isso deixava uma unica
+     chamine visivel, e o Papai Noel entregava um presente por travessia.
+     Encolhendo a faixa, a escala cai junto e cabem mais casas. */
+  .vilarejo { height: 112px; }
+}
+
+@media (max-width: 420px) {
+  .vilarejo { height: 92px; }
 }
 
 @media (max-width: 380px) {
