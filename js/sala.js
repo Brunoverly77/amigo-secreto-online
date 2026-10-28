@@ -266,6 +266,10 @@
     }
 
     mostrar("btn-sair", Boolean(eu && !travada && !eu.eh_admin));
+
+    /* o link pessoal tem que estar sempre a mao, nao so na hora de entrar:
+       quem ja esta na sala e vai trocar de celular precisa pegar o dele */
+    mostrar("btn-meu-acesso", Boolean(eu));
   }
 
   /* ------------------------------------------- lista de quem ja entrou */
@@ -494,6 +498,14 @@
   });
 
   $("btn-link-guardei").addEventListener("click", () => mostrar("secao-meu-link", false));
+
+  $("btn-meu-acesso").addEventListener("click", () => {
+    mostrarMeuLink(
+      "Mande este link para voce mesmo no WhatsApp. E por ele que voce abre esta " +
+      "sala em outro celular, em outro navegador ou numa aba anonima, continuando " +
+      "sendo voce."
+    );
+  });
 
   /* ------------------------------------------------- sair da sala -- */
   $("btn-sair").addEventListener("click", async () => {
