@@ -14,7 +14,25 @@
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "");
 
-  const linkSala = location.href.split("#")[0].split("?")[0] + "?c=" + codigo;
+  const baseUrl = location.href.split("#")[0].split("?")[0];
+  const linkSala = baseUrl + "?c=" + codigo;
+
+  /* O link pessoal leva a identidade dentro: e por ele que a pessoa volta
+     num aparelho novo. E de uso unico - ao ser usado, a chave troca. */
+  const meuLink = () => {
+    const g = mem();
+    return g.pid && g.token ? `${baseUrl}?c=${codigo}&eu=${g.pid}.${g.token}` : null;
+  };
+
+  /* identidade vinda pela URL, se a pessoa abriu um link pessoal */
+  const convite = (new URLSearchParams(location.search).get("eu") || "").split(".");
+  const conviteValido = convite.length === 2 && convite[0].length > 20 && convite[1].length > 20;
+
+  /* tira a chave da barra de endereco, para nao ficar exposta nem ir
+     parar num print sem a pessoa perceber */
+  function limparUrl() {
+    history.replaceState(null, "", `${location.pathname}?c=${codigo}`);
+  }
 
   let sala = null;        // linha da tabela salas
   let pessoas = [];       // quem ja entrou
@@ -57,6 +75,66 @@
     pessoas = ps || [];
     desenhar();
     if (!canal) ligarTempoReal();
+    conferirConvite();
+  }
+
+  /* ============================= LINK PESSOAL (convite na URL) ====== */
+  let conviteJaTratado = false;
+
+  function conferirConvite() {
+    if (!conviteValido || conviteJaTratado) return;
+    conviteJaTratado = true;
+
+    const [pid] = convite;
+    const dono = pessoas.find((p) => p.id === pid);
+
+    /* o link aponta para alguem que nao esta mais na sala */
+    if (!dono) {
+      limparUrl();
+      aviso("Esse link nao vale mais: a pessoa nao esta na lista.", "erro");
+      return;
+    }
+
+    /* ja e este aparelho: nao precisa gastar o link */
+    if (mem().pid === pid) {
+      limparUrl();
+      return;
+    }
+
+    $("nome-assumir").textContent = dono.nome;
+    abrirModal("modal-assumir");
+  }
+
+  $("btn-confirmar-assumir").addEventListener("click", async () => {
+    const botao = $("btn-confirmar-assumir");
+    ocupado(botao, true);
+
+    const { data: res, error } = await db.rpc("assumir_link", {
+      p_participante_id: convite[0],
+      p_token: convite[1]
+    });
+
+    ocupado(botao, false);
+    fecharModal("modal-assumir");
+    limparUrl();
+
+    if (error) {
+      aviso(recado(error), "erro");
+      return;
+    }
+
+    Memoria.gravar(codigo, { pid: res.participante_id, token: res.token, nome: res.nome });
+    mostrarMeuLink("Pronto, voce voltou! <strong>Seu link mudou</strong> por segurança: guarde o novo, o antigo nao vale mais.");
+    aviso("Boas-vindas de volta, " + res.nome + "!", "certo");
+    carregar();
+  });
+
+  /* mostra o cartao do link pessoal, com um texto de abertura */
+  function mostrarMeuLink(texto) {
+    if (!meuLink()) return;
+    if (texto) $("ajuda-meu-link").innerHTML = texto;
+    mostrar("secao-meu-link", true);
+    $("secao-meu-link").scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   /* Junta varios eventos do tempo real numa recarga so. */
@@ -124,6 +202,9 @@
     /* So aparece para quem ainda nao entrou, e so enquanto a sala
        estiver aberta. Depois do sorteio ninguem mais entra. */
     mostrar("secao-entrar", !eu && !travada);
+
+    /* o cartao do link pessoal so faz sentido para quem esta na sala */
+    if (!eu) mostrar("secao-meu-link", false);
     mostrar("cartao-convite", !travada);
 
     /* ------------------------------- nomes liberados para recuperar -- */
@@ -379,7 +460,40 @@
 
     aviso("Pronto, voce esta na lista!", "certo");
     carregar();
+
+    /* logo depois de entrar e a melhor hora para ela guardar o acesso */
+    setTimeout(() => mostrarMeuLink(null), 600);
   });
+
+  /* ------------------------------------- guardar o link pessoal -- */
+  $("btn-link-whatsapp").addEventListener("click", () => {
+    const link = meuLink();
+    if (!link) return;
+
+    const texto = [
+      "🔑 Meu acesso ao amigo secreto (sala " + codigo + ")",
+      "",
+      "Se eu trocar de celular, volto por aqui:",
+      link,
+      "",
+      "Este link e so meu, nao mandar para ninguem."
+    ].join("\n");
+
+    window.open("https://wa.me/?text=" + encodeURIComponent(texto), "_blank", "noopener");
+  });
+
+  $("btn-link-copiar").addEventListener("click", async () => {
+    const link = meuLink();
+    if (!link) return;
+    try {
+      await navigator.clipboard.writeText(link);
+      aviso("Link copiado. Guarde num lugar so seu.", "certo");
+    } catch (e) {
+      aviso("Nao deu para copiar. Use o botao do WhatsApp.", "erro");
+    }
+  });
+
+  $("btn-link-guardei").addEventListener("click", () => mostrar("secao-meu-link", false));
 
   /* ------------------------------------------------- sair da sala -- */
   $("btn-sair").addEventListener("click", async () => {
@@ -578,8 +692,30 @@
     $("dica-sorteado").classList.toggle("escondido", !temDica);
     if (temDica) $("texto-dica-sorteado").textContent = res.dica;
 
+    /* Guardar o resultado no proprio WhatsApp e o que de fato resolve o
+       problema de perder o acesso: com ele salvo, a pessoa nem precisa
+       voltar ao site. */
+    ultimoResultado = res;
+
     abrirModal("modal-resultado");
     carregar();
+  });
+
+  let ultimoResultado = null;
+
+  $("btn-resultado-whatsapp").addEventListener("click", () => {
+    if (!ultimoResultado) return;
+
+    const partes = [
+      "🎁 Amigo secreto (sala " + codigo + ")",
+      "",
+      "Eu tirei: " + ultimoResultado.nome
+    ];
+    if (ultimoResultado.dica) partes.push("", "A dica dela: " + ultimoResultado.dica);
+    if (sala && sala.data_festa) partes.push("", "Festa em " + dataBonita(sala.data_festa));
+    partes.push("", "Segredo! Nao contar para ninguem.");
+
+    window.open("https://wa.me/?text=" + encodeURIComponent(partes.join("\n")), "_blank", "noopener");
   });
 
   /* ------------------------------------------- desfazer o sorteio -- */

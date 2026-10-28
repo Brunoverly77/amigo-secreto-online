@@ -93,6 +93,36 @@
         entra, sai ou muda de lugar. Agora e so cada um ver quem tirou.</span>
       </div>
 
+      <!-- ------------------------------- guarde o seu link pessoal -->
+      <section class="cartao escondido" id="secao-meu-link">
+        <h2>&#128273; Guarde o seu acesso</h2>
+        <p class="ajuda" id="ajuda-meu-link">
+          Mande este link para voce mesmo no WhatsApp. Se trocar de celular,
+          limpar o navegador ou abrir numa aba anonima, e por ele que voce volta
+          &mdash; sem depender de ninguem.
+        </p>
+
+        <div class="aviso">
+          <span class="icone">&#9888;</span>
+          <span>Esse link e <strong>so seu</strong>. Quem abrir ele entra como
+          voce e ve quem voce tirou. Nao cole no grupo.</span>
+        </div>
+
+        <div class="btn-linha">
+          <button class="btn btn-ouro btn-pequeno" id="btn-link-whatsapp" style="width:auto">
+            &#128241; Mandar para mim no WhatsApp
+          </button>
+          <button class="btn btn-fantasma btn-pequeno" id="btn-link-copiar" style="width:auto">
+            &#128203; Copiar
+          </button>
+        </div>
+
+        <button class="btn btn-fantasma btn-pequeno" id="btn-link-guardei"
+                style="width:auto;margin-top:10px">
+          Ja guardei, pode esconder
+        </button>
+      </section>
+
       <!-- --------------------------- perdi o acesso / nome liberado -->
       <div class="aviso escondido" id="aviso-liberado">
         <span class="icone">&#128273;</span>
@@ -242,7 +272,10 @@
       <span>Agora e segredo! Nao conta para ninguem.</span>
     </div>
 
-    <button class="btn btn-ouro" data-fechar="modal-resultado">Entendi, guardei!</button>
+    <button class="btn btn-ouro" id="btn-resultado-whatsapp" style="margin-bottom:10px">
+      &#128241; Mandar para mim no WhatsApp
+    </button>
+    <button class="btn btn-fantasma" data-fechar="modal-resultado">Entendi, guardei!</button>
   </div>
 </div>
 
@@ -259,6 +292,28 @@
     <div class="btn-linha">
       <button class="btn" id="btn-confirmar-sorteio">Sim, sortear agora</button>
       <button class="btn btn-fantasma" data-fechar="modal-sortear">Ainda nao</button>
+    </div>
+  </div>
+</div>
+
+<!-- assumir o acesso por link pessoal -->
+<div class="cortina" id="modal-assumir">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-assumir">
+    <h3 id="titulo-assumir">&#128273; Voce e <span id="nome-assumir">...</span>?</h3>
+    <p class="ajuda">
+      Voce abriu um link pessoal. Se confirmar, este aparelho passa a ser o seu
+      acesso nesta sala.
+    </p>
+
+    <div class="aviso">
+      <span class="icone">&#9888;</span>
+      <span>O aparelho antigo <strong>vai perder o acesso</strong>, e este link
+      deixa de funcionar. Voce recebe um link novo para guardar.</span>
+    </div>
+
+    <div class="btn-linha">
+      <button class="btn btn-ouro" id="btn-confirmar-assumir">Sim, sou eu</button>
+      <button class="btn btn-fantasma" data-fechar="modal-assumir">Nao sou eu</button>
     </div>
   </div>
 </div>

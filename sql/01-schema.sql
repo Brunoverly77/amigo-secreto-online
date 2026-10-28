@@ -49,6 +49,7 @@ drop function if exists public.ver_resultado(uuid, text);
 drop function if exists public.ver_resultado(uuid, uuid);
 drop function if exists public.resetar_pin(uuid, uuid, uuid);
 drop function if exists public.realizar_sorteio(uuid, uuid);
+drop function if exists public.assumir_link(uuid, uuid);
 drop function if exists public.reabrir_sala(uuid, uuid);
 drop function if exists public.apagar_sala(uuid, uuid);
 drop function if exists public.gerar_codigo();
@@ -528,6 +529,40 @@ begin
 end;
 $func$;
 
+-- -------------------------------- assumir o acesso por link pessoal
+-- O link pessoal e de USO UNICO: ao ser usado, a chave antiga morre e
+-- uma nova nasce. Assim, se o link vazar e um curioso clicar, o celular
+-- da dona para de funcionar na hora e ela percebe, em vez de ser
+-- espionada em silencio. O link vazado tambem ja nao serve a ninguem.
+create or replace function public.assumir_link(
+  p_participante_id uuid,
+  p_token uuid
+)
+returns json
+language plpgsql
+security definer
+set search_path = public, extensions
+as $func$
+declare
+  v_novo uuid := gen_random_uuid();
+  v_nome text;
+begin
+  perform public.checar_token(p_participante_id, p_token);
+
+  update public.segredos
+     set token = v_novo
+   where participante_id = p_participante_id;
+
+  select nome into v_nome from public.participantes where id = p_participante_id;
+
+  return json_build_object(
+    'participante_id', p_participante_id,
+    'token', v_novo,
+    'nome', v_nome
+  );
+end;
+$func$;
+
 -- ------------------------------------------- desfazer o sorteio
 -- Só vale enquanto ninguem tiver aberto o resultado. Depois que alguem
 -- viu, refazer vazaria informacao: aí o caminho e apagar a sala.
@@ -605,6 +640,7 @@ grant execute on function public.liberar_nome(uuid, uuid, uuid)           to ano
 grant execute on function public.recuperar_nome(uuid)                     to anon, authenticated;
 grant execute on function public.realizar_sorteio(uuid, uuid)             to anon, authenticated;
 grant execute on function public.ver_resultado(uuid, uuid)                to anon, authenticated;
+grant execute on function public.assumir_link(uuid, uuid)                 to anon, authenticated;
 grant execute on function public.reabrir_sala(uuid, uuid)                 to anon, authenticated;
 grant execute on function public.apagar_sala(uuid, uuid)                  to anon, authenticated;
 
