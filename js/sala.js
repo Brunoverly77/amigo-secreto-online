@@ -346,6 +346,7 @@
     });
     $("btn-estou-sozinho").addEventListener("click", revelar);
     $("btn-resultado-whatsapp").addEventListener("click", mandarResultadoWhatsapp);
+    $("btn-resultado-copiar").addEventListener("click", copiarResultado);
 
     /* ------------------------------------------- desfazer o sorteio -- */
     $("btn-reabrir").addEventListener("click", () => abrirModal("modal-reabrir"));
@@ -473,19 +474,47 @@
     carregar();
   }
 
-  function mandarResultadoWhatsapp() {
-    if (!ultimoResultado) return;
-
+  /* monta o texto do resultado (usado no WhatsApp e no copiar) */
+  function textoResultado() {
     const partes = [
       "🎁 Amigo secreto (sala " + codigo + ")",
       "",
       "Eu tirei: " + ultimoResultado.nome
     ];
-    if (ultimoResultado.dica) partes.push("", "A dica dela: " + ultimoResultado.dica);
+    if (ultimoResultado.dica) partes.push("", "A dica dela(e): " + ultimoResultado.dica);
     if (sala && sala.data_festa) partes.push("", "Festa em " + dataBonita(sala.data_festa));
     partes.push("", "Segredo! Não contar para ninguém.");
+    return partes.join("\n");
+  }
 
-    window.open("https://wa.me/?text=" + encodeURIComponent(partes.join("\n")), "_blank", "noopener");
+  function mandarResultadoWhatsapp() {
+    if (!ultimoResultado) return;
+    window.open("https://wa.me/?text=" + encodeURIComponent(textoResultado()), "_blank", "noopener");
+  }
+
+  /* copia o resultado pra pessoa guardar onde quiser (notas, etc.) */
+  async function copiarResultado() {
+    if (!ultimoResultado) return;
+    const texto = textoResultado();
+    try {
+      await navigator.clipboard.writeText(texto);
+      aviso("Copiado! Cole nas suas notas pra não esquecer.", "certo");
+    } catch (e) {
+      const campo = document.createElement("textarea");
+      campo.value = texto;
+      campo.style.position = "fixed";
+      campo.style.opacity = "0";
+      document.body.appendChild(campo);
+      campo.focus();
+      campo.select();
+      try {
+        document.execCommand("copy");
+        aviso("Copiado! Cole nas suas notas pra não esquecer.", "certo");
+      } catch (e2) {
+        aviso("Não deu para copiar. Use o botão do WhatsApp.", "erro");
+      }
+      campo.remove();
+    }
   }
 
   /* ------------------------------------------- desfazer o sorteio -- */
