@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entrar — Amigo Secreto de Natal</title>
+<meta name="description" content="Entre ou crie sua conta para participar do amigo secreto.">
+<meta name="theme-color" content="#071324">
+
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127876;</text></svg>">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Inter:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="css/natal.css">
+</head>
+<body>
+
+<div class="ceu" aria-hidden="true"></div>
+
+<main class="pagina">
+
+  <header class="marca">
+    <span class="arvore" aria-hidden="true">&#127876;</span>
+    <h1>Amigo Secreto de Natal</h1>
+    <p id="chamada">Entre na sua conta para participar.</p>
+  </header>
+
+  <div data-conteudo>
+
+    <!-- abas -->
+    <div class="abas" id="abas">
+      <button class="aba ativa" data-aba="entrar" type="button">Entrar</button>
+      <button class="aba" data-aba="criar" type="button">Criar conta</button>
+    </div>
+
+    <!-- =============================================== ENTRAR -->
+    <section class="cartao" id="painel-entrar">
+      <h2>&#128273; Entrar</h2>
+      <p class="ajuda">Digite seu email e o seu PIN de 6 números.</p>
+
+      <form id="form-entrar" novalidate>
+        <div class="campo-grupo">
+          <label for="entrar-email">Email</label>
+          <input class="campo" type="email" id="entrar-email"
+                 autocomplete="email" inputmode="email"
+                 placeholder="voce@email.com" required>
+        </div>
+
+        <div class="campo-grupo">
+          <label for="entrar-pin">PIN (6 números)</label>
+          <input class="campo campo-pin" type="password" id="entrar-pin"
+                 inputmode="numeric" autocomplete="current-password"
+                 maxlength="6" placeholder="••••••" required>
+        </div>
+
+        <label class="lembrar">
+          <input type="checkbox" id="lembrar" checked>
+          <span>Salvar meu login por 5 dias</span>
+        </label>
+
+        <button class="btn" type="submit" id="btn-entrar">Entrar</button>
+
+        <button class="link-texto" type="button" id="btn-esqueci">
+          Esqueci meu PIN
+        </button>
+      </form>
+    </section>
+
+    <!-- =============================================== CRIAR CONTA -->
+    <section class="cartao escondido" id="painel-criar">
+      <h2>&#127873; Criar minha conta</h2>
+      <p class="ajuda">É rapidinho: nome, email e um PIN de 6 números.</p>
+
+      <form id="form-criar" novalidate>
+        <div class="campo-grupo">
+          <label for="criar-nome">Seu nome</label>
+          <input class="campo" type="text" id="criar-nome"
+                 autocomplete="name" maxlength="40"
+                 placeholder="Como vão te chamar na sala" required>
+        </div>
+
+        <div class="campo-grupo">
+          <label for="criar-email">Email</label>
+          <input class="campo" type="email" id="criar-email"
+                 autocomplete="email" inputmode="email"
+                 placeholder="voce@email.com" required>
+          <div class="contador">Usado só pra você recuperar o PIN se esquecer.</div>
+        </div>
+
+        <div class="campo-grupo">
+          <label for="criar-pin">Crie um PIN (6 números)</label>
+          <input class="campo campo-pin" type="password" id="criar-pin"
+                 inputmode="numeric" autocomplete="new-password"
+                 maxlength="6" placeholder="••••••" required>
+        </div>
+
+        <button class="btn btn-ouro" type="submit" id="btn-criar">
+          Criar conta e entrar
+        </button>
+      </form>
+    </section>
+
+    <!-- =============================================== ESQUECI -->
+    <section class="cartao escuro escondido" id="painel-esqueci">
+      <h2>&#128273; Esqueci meu PIN</h2>
+      <p class="ajuda">
+        Digite seu email. A gente manda um link pra você criar um PIN novo.
+      </p>
+
+      <form id="form-esqueci" novalidate>
+        <div class="campo-grupo">
+          <label for="esqueci-email">Email da sua conta</label>
+          <input class="campo" type="email" id="esqueci-email"
+                 autocomplete="email" inputmode="email"
+                 placeholder="voce@email.com" required>
+        </div>
+
+        <button class="btn" type="submit" id="btn-enviar-reset">
+          Mandar o link no meu email
+        </button>
+
+        <button class="link-texto" type="button" data-voltar>
+          &#8592; Voltar
+        </button>
+      </form>
+    </section>
+
+  </div>
+
+  <footer class="rodape">
+    Sua conta serve pra qualquer sala. &#127876;
+  </footer>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/comum.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/login.js"></script>
+</body>
+</html>

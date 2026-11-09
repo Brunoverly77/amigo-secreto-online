@@ -534,10 +534,9 @@ function aviso(texto, tipo) {
 
 /* --------------------------------------- mensagens de erro humanas ---- */
 const RECADOS = {
-  NOME_CURTO: "Escreva um nome com pelo menos 2 letras.",
-  NOME_REPETIDO: "Ja tem alguem com esse nome na sala. Coloque o sobrenome para diferenciar.",
-  CHAVE_INVALIDA: "Este celular perdeu o acesso a esse nome. Peca para o organizador liberar o seu nome.",
-  NOME_NAO_LIBERADO: "Esse nome ainda nao foi liberado. Peca para o organizador liberar.",
+  NAO_LOGADO: "Sua sessao expirou. Entre de novo na sua conta.",
+  SEM_PERFIL: "Sua conta esta sem nome. Saia e entre de novo.",
+  NAO_PARTICIPA: "Voce nao esta nesta sala.",
   ADMIN_NAO_SAI: "Quem criou a sala nao pode sair dela.",
   ALGUEM_JA_VIU: "Alguem ja abriu o resultado, entao o sorteio nao pode mais ser desfeito.",
   MINIMO_3: "O sorteio precisa de pelo menos 3 pessoas.",

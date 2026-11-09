@@ -1,9 +1,13 @@
 /* =====================================================================
-   PAGINA INICIAL — criar sala, entrar numa sala, listar salas visitadas.
+   PAGINA INICIAL — precisa de login. Criar sala, entrar numa sala e
+   listar as salas da conta (de qualquer aparelho, vindo do banco).
    ===================================================================== */
 
 (function () {
   if (!exigirConfig()) return;
+
+  const $ = (id) => document.getElementById(id);
+  const mostrar = (id, sim) => $(id).classList.toggle("escondido", !sim);
 
   /* chegou aqui depois de apagar uma sala */
   const apagada = new URLSearchParams(location.search).get("apagada");
@@ -12,119 +16,96 @@
     history.replaceState(null, "", location.pathname);
   }
 
-  const formCriar = document.getElementById("form-criar");
-  const formEntrar = document.getElementById("form-entrar");
-  const campoCodigo = document.getElementById("codigo");
+  /* precisa estar logado; se nao estiver, vai pro login e volta pra ca */
+  (async () => {
+    const user = await Auth.exigir();
+    if (!user) return;
+    iniciar(user);
+  })();
 
-  /* -------------------------------------------------- criar a sala -- */
-  formCriar.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-
-    const botao = document.getElementById("btn-criar");
-    const nome = document.getElementById("nome").value.trim();
-    const data = document.getElementById("data").value || null;
-
-    if (nome.length < 2) {
-      aviso("Escreva seu nome com pelo menos 2 letras.", "erro");
-      document.getElementById("nome").focus();
-      return;
-    }
-
-    ocupado(botao, true);
-
-    const { data: res, error } = await db.rpc("criar_sala", {
-      p_nome: nome,
-      p_data: data
-    });
-
-    if (error) {
-      ocupado(botao, false);
-      aviso(recado(error), "erro");
-      return;
-    }
-
-    Memoria.gravar(res.codigo, {
-      pid: res.participante_id,
-      token: res.token,
-      admin: res.admin_token,
-      nome: nome
-    });
-
-    location.href = "sala.html?c=" + encodeURIComponent(res.codigo);
-  });
-
-  /* ------------------------------------------------ entrar na sala -- */
-  campoCodigo.addEventListener("input", () => {
-    campoCodigo.value = campoCodigo.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
-  });
-
-  formEntrar.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-
-    const botao = document.getElementById("btn-entrar");
-    const codigo = campoCodigo.value.trim().toUpperCase();
-
-    if (codigo.length !== 6) {
-      aviso("O codigo tem 6 caracteres.", "erro");
-      campoCodigo.focus();
-      return;
-    }
-
-    ocupado(botao, true);
-
-    const { data: sala, error } = await db
-      .from("salas")
-      .select("codigo")
-      .eq("codigo", codigo)
-      .maybeSingle();
-
-    ocupado(botao, false);
-
-    if (error) {
-      aviso(recado(error), "erro");
-      return;
-    }
-
-    if (!sala) {
-      aviso("Nao achei nenhuma sala com esse codigo. Confira as letras.", "erro");
-      campoCodigo.focus();
-      campoCodigo.select();
-      return;
-    }
-
-    location.href = "sala.html?c=" + encodeURIComponent(codigo);
-  });
-
-  /* --------------------------------------------- salas deste celular -- */
-  function minhasSalas() {
-    const prefixo = "amigo-secreto-natal:";
-    const achadas = [];
-
+  async function iniciar(user) {
+    /* saudacao com o nome da conta + botao sair */
+    let nome = (user.user_metadata && user.user_metadata.nome) || "";
     try {
-      for (let i = 0; i < localStorage.length; i++) {
-        const chave = localStorage.key(i);
-        if (!chave || !chave.startsWith(prefixo)) continue;
-        const codigo = chave.slice(prefixo.length);
-        let dados = {};
-        try { dados = JSON.parse(localStorage.getItem(chave)) || {}; } catch (e) { dados = {}; }
-        achadas.push({ codigo, admin: Boolean(dados.admin), nome: dados.nome || "" });
+      const { data } = await db.from("perfis").select("nome").eq("id", user.id).single();
+      if (data && data.nome) nome = data.nome;
+    } catch (e) { /* segue com o nome do metadata */ }
+
+    $("ola-nome").textContent = nome || "você";
+    mostrar("barra-conta", true);
+    $("btn-sair-conta").addEventListener("click", () => Auth.sair(true));
+
+    ligarForms();
+    carregarMinhasSalas(user);
+  }
+
+  function ligarForms() {
+    /* -------------------------------------------- criar a sala -- */
+    $("form-criar").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const botao = $("btn-criar");
+      const data = $("data").value || null;
+
+      ocupado(botao, true);
+      const { data: res, error } = await db.rpc("criar_sala", { p_data: data });
+      if (error) {
+        ocupado(botao, false);
+        aviso(recado(error), "erro");
+        return;
       }
-    } catch (e) {
-      return;
-    }
+      location.href = "sala.html?c=" + encodeURIComponent(res.codigo);
+    });
 
-    if (!achadas.length) return;
+    /* -------------------------------------------- entrar na sala -- */
+    const campoCodigo = $("codigo");
+    campoCodigo.addEventListener("input", () => {
+      campoCodigo.value = campoCodigo.value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 6);
+    });
 
-    const secao = document.getElementById("secao-minhas");
-    const lista = document.getElementById("lista-minhas");
+    $("form-entrar").addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const codigo = campoCodigo.value.trim().toUpperCase();
+      if (codigo.length !== 6) {
+        aviso("O código tem 6 caracteres.", "erro");
+        campoCodigo.focus();
+        return;
+      }
+      /* so leva pra sala; participar e um toque la dentro */
+      location.href = "sala.html?c=" + encodeURIComponent(codigo);
+    });
+  }
 
-    lista.innerHTML = achadas
-      .map((s) => `
-        <li class="clicavel" data-codigo="${escapar(s.codigo)}">
-          <span class="bolinha">&#127873;</span>
-          <span class="nome" style="font-family:'Courier New',monospace;letter-spacing:.14em">${escapar(s.codigo)}</span>
-          ${s.admin ? '<span class="selo">organizador</span>' : ""}
-        </li>`)
+  /* -------------------------------------- salas da minha conta -- */
+  async function carregarMinhasSalas(user) {
+    const { data, error } = await db
+      .from("participantes")
+      .select("eh_admin, salas ( codigo, nome_criador, data_festa, sorteada, criada_em )")
+      .eq("user_id", user.id);
+
+    if (error || !data) return;
+
+    /* da mais nova pra mais antiga */
+    const linhas = data
+      .filter((p) => p.salas)
+      .sort((a, b) => String(b.salas.criada_em || "").localeCompare(String(a.salas.criada_em || "")));
+
+    if (!linhas.length) return;
+
+    const lista = $("lista-minhas");
+    lista.innerHTML = linhas
+      .map((p) => {
+        const s = p.salas;
+        const estado = s.sorteada
+          ? '<span class="selo cereja">sorteada</span>'
+          : '<span class="selo menta">aberta</span>';
+        const admin = p.eh_admin ? '<span class="selo">organizador</span>' : "";
+        return `
+          <li class="clicavel" data-codigo="${escapar(s.codigo)}">
+            <span class="bolinha">&#127873;</span>
+            <span class="nome" style="font-family:'Courier New',monospace;letter-spacing:.14em">${escapar(s.codigo)}</span>
+            ${admin}${estado}
+          </li>`;
+      })
       .join("");
 
     lista.querySelectorAll("li").forEach((li) => {
@@ -133,8 +114,6 @@
       });
     });
 
-    secao.classList.remove("escondido");
+    mostrar("secao-minhas", true);
   }
-
-  minhasSalas();
 })();

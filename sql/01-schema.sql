@@ -1,70 +1,87 @@
 -- =====================================================================
--- AMIGO SECRETO DE NATAL - estrutura do banco (Supabase / PostgreSQL)
+-- AMIGO SECRETO DE NATAL - banco com LOGIN (Supabase Auth)
 -- =====================================================================
--- Como usar: painel do Supabase > SQL Editor > New query,
--- cole TODO este arquivo e clique em Run.
+-- Como usar: Supabase > SQL Editor > New query > cole tudo > Run.
 --
 -- ATENCAO: este arquivo APAGA e recria as tabelas do amigo secreto.
--- Rodar de novo zera todas as salas. Nao toca em nenhuma outra tabela
--- do projeto: so mexe nos cinco nomes listados aqui embaixo.
+-- Rodar de novo zera todas as salas. So mexe nos nomes listados aqui.
 --
--- COMO FUNCIONA A ENTRADA
--- Ninguem adiciona ninguem. Cada pessoa abre o link e entra com o
--- proprio nome, no proprio celular. Quem nao entrou nao participa do
--- sorteio, entao nao existe "nome fantasma" na lista.
+-- COMO FUNCIONA AGORA (login de verdade)
+-- Cada pessoa tem uma CONTA no site: nome + email + PIN de 6 numeros.
+-- Quem prova a identidade e o proprio login (a sessao do Supabase Auth),
+-- nao mais uma chave guardada no aparelho. Por isso sumiu toda aquela
+-- mecanica de token, link pessoal e liberar nome: o login resolve.
 --
--- COMO FUNCIONA O SIGILO
--- Ao entrar, a pessoa ganha uma chave secreta (token) que fica guardada
--- no celular dela. E essa chave que prova quem ela e na hora de ver o
--- resultado. A chave nunca aparece na tela e nunca sai pelas tabelas
--- publicas - nem o organizador consegue ver.
+-- - Cadastro: nome + email + PIN
+-- - Entrar: email + PIN (no mesmo aparelho, fica logado)
+-- - Esqueceu o PIN: recupera pelo email, sozinho
 --
--- O navegador roda com a chave publica (anon), e o tempo real transmite
--- a linha inteira para todos os celulares da sala. Por isso NADA secreto
--- mora nas tabelas publicas:
+-- O SIGILO continua: o sorteio e a dica ficam em tabelas que o navegador
+-- nao le direto. So as funcoes abaixo chegam nelas.
 --
---   PUBLICO (o celular le)      SEGREDO (so as funcoes leem)
---   -------------------------   ----------------------------------
---   salas                       salas_admin  (token do organizador)
---   participantes               segredos     (token e dica de cada um)
---                               sorteios     (quem tirou quem)
+--   PUBLICO (o site le)        SEGREDO (so as funcoes leem)
+--   -----------------------    ----------------------------------
+--   perfis (so o proprio)      dicas     (a dica de cada um)
+--   salas                      sorteios  (quem tirou quem)
+--   participantes
 -- =====================================================================
 
 create extension if not exists pgcrypto with schema extensions;
 
 -- ============================================== limpeza da versao antiga
+drop trigger if exists ao_criar_usuario on auth.users;
+
+drop function if exists public.handle_new_user();
 drop function if exists public.criar_sala(text, text, date);
 drop function if exists public.criar_sala(text, date);
+drop function if exists public.criar_sala(date);
 drop function if exists public.entrar_na_sala(text, text);
-drop function if exists public.reivindicar_nome(uuid, text, text);
-drop function if exists public.conferir_pin(uuid, text);
-drop function if exists public.checar_pin(uuid, text);
-drop function if exists public.atualizar_dica(uuid, text, text);
+drop function if exists public.entrar_na_sala(text);
 drop function if exists public.definir_dica(uuid, uuid, text);
+drop function if exists public.definir_dica(uuid, text);
+drop function if exists public.minha_dica(uuid, uuid);
+drop function if exists public.minha_dica(uuid);
 drop function if exists public.sair_da_sala(uuid, uuid);
+drop function if exists public.sair_da_sala(uuid);
 drop function if exists public.remover_participante(uuid, uuid, uuid);
+drop function if exists public.remover_participante(uuid, uuid);
 drop function if exists public.liberar_nome(uuid, uuid, uuid);
 drop function if exists public.recuperar_nome(uuid);
 drop function if exists public.ver_resultado(uuid, text);
 drop function if exists public.ver_resultado(uuid, uuid);
+drop function if exists public.ver_resultado(uuid);
 drop function if exists public.resetar_pin(uuid, uuid, uuid);
 drop function if exists public.realizar_sorteio(uuid, uuid);
+drop function if exists public.realizar_sorteio(uuid);
 drop function if exists public.assumir_link(uuid, uuid);
 drop function if exists public.reabrir_sala(uuid, uuid);
+drop function if exists public.reabrir_sala(uuid);
 drop function if exists public.apagar_sala(uuid, uuid);
+drop function if exists public.apagar_sala(uuid);
+drop function if exists public.checar_token(uuid, uuid);
 drop function if exists public.gerar_codigo();
 
 drop table if exists public.sorteios      cascade;
+drop table if exists public.dicas         cascade;
 drop table if exists public.segredos      cascade;
 drop table if exists public.salas_admin   cascade;
 drop table if exists public.participantes cascade;
 drop table if exists public.salas         cascade;
+drop table if exists public.perfis        cascade;
 
--- ===================================================== TABELAS PUBLICAS
+-- =========================================================== TABELAS
+
+-- O perfil da conta. Nasce junto com o cadastro (gatilho mais abaixo).
+create table public.perfis (
+  id        uuid primary key references auth.users(id) on delete cascade,
+  nome      text not null,
+  criado_em timestamptz not null default now()
+);
 
 create table public.salas (
   id           uuid primary key default gen_random_uuid(),
   codigo       text not null unique,
+  admin_id     uuid not null references auth.users(id) on delete cascade,
   nome_criador text not null,
   data_festa   date,
   sorteada     boolean not null default false,
@@ -75,32 +92,24 @@ create table public.salas (
 create table public.participantes (
   id            uuid primary key default gen_random_uuid(),
   sala_id       uuid not null references public.salas(id) on delete cascade,
+  user_id       uuid not null references auth.users(id) on delete cascade,
   nome          text not null,
   eh_admin      boolean not null default false,
-  -- true quando o organizador libera o nome para a pessoa reassumir
-  -- num celular novo (caso ela tenha perdido o acesso)
-  liberado      boolean not null default false,
   viu_resultado boolean not null default false,
   visto_em      timestamptz,
-  criado_em     timestamptz not null default now()
+  criado_em     timestamptz not null default now(),
+  unique (sala_id, user_id)
 );
 
 create index participantes_sala_idx on public.participantes(sala_id);
 
--- ===================================================== TABELAS SECRETAS
-
-create table public.salas_admin (
-  sala_id     uuid primary key references public.salas(id) on delete cascade,
-  admin_token uuid not null default gen_random_uuid()
-);
-
--- A chave secreta do celular de cada pessoa, e a dica de presente dela.
-create table public.segredos (
+-- a dica de presente de cada um (secreta: so quem te tirou le)
+create table public.dicas (
   participante_id uuid primary key references public.participantes(id) on delete cascade,
-  token           uuid not null default gen_random_uuid(),
   dica            text
 );
 
+-- o resultado: "de_id tirou para_id" (secreto)
 create table public.sorteios (
   id        uuid primary key default gen_random_uuid(),
   sala_id   uuid not null references public.salas(id) on delete cascade,
@@ -110,35 +119,68 @@ create table public.sorteios (
   unique (sala_id, de_id)
 );
 
+-- ========================================== PERFIL NASCE NO CADASTRO
+-- Quando alguem se cadastra, o Supabase cria a conta em auth.users; este
+-- gatilho cria o perfil junto, pegando o nome que veio do formulario.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $func$
+begin
+  insert into public.perfis (id, nome)
+  values (
+    new.id,
+    coalesce(nullif(btrim(new.raw_user_meta_data ->> 'nome'), ''), 'Participante')
+  );
+  return new;
+end;
+$func$;
+
+create trigger ao_criar_usuario
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
 -- ============================================================ PERMISSOES
 
+alter table public.perfis        enable row level security;
 alter table public.salas         enable row level security;
 alter table public.participantes enable row level security;
-alter table public.salas_admin   enable row level security;
-alter table public.segredos      enable row level security;
+alter table public.dicas         enable row level security;
 alter table public.sorteios      enable row level security;
 
+revoke all on public.perfis        from anon, authenticated;
 revoke all on public.salas         from anon, authenticated;
 revoke all on public.participantes from anon, authenticated;
-revoke all on public.salas_admin   from anon, authenticated;
-revoke all on public.segredos      from anon, authenticated;
+revoke all on public.dicas         from anon, authenticated;
 revoke all on public.sorteios      from anon, authenticated;
 
--- O celular so LE as duas tabelas publicas. Toda escrita passa pelas
--- funcoes aqui embaixo, que conferem token antes de fazer qualquer coisa.
-grant select on public.salas         to anon, authenticated;
-grant select on public.participantes to anon, authenticated;
+-- O site logado LE o proprio perfil, as salas e os participantes.
+-- Escrever e so pelas funcoes. dicas e sorteios ninguem le direto.
+grant select on public.perfis        to authenticated;
+grant select on public.salas         to authenticated;
+grant select on public.participantes to authenticated;
 
+-- cada um ve so o proprio perfil
+create policy "ler meu perfil" on public.perfis
+  for select to authenticated using (auth.uid() = id);
+
+-- salas e participantes nao sao secretos (codigo, nome, quem entrou)
 create policy "ler salas" on public.salas
-  for select to anon, authenticated using (true);
+  for select to authenticated using (true);
 
 create policy "ler participantes" on public.participantes
-  for select to anon, authenticated using (true);
+  for select to authenticated using (true);
+
+-- dicas e sorteios: sem politica de propósito. So as funcoes chegam.
 
 -- ================================================================ FUNCOES
+-- Todas rodam no servidor com poder de dono (security definer) e usam
+-- auth.uid() - o id de quem esta logado - para saber quem e a pessoa.
 
--- -------------------------------------------------- codigo de 6 digitos
--- Sem os caracteres que confundem na leitura: I, O, 0 e 1.
+-- -------------------------------------------------- codigo de 6 letras
+-- Sem os caracteres que confundem: I, O, 0 e 1.
 create or replace function public.gerar_codigo()
 returns text
 language plpgsql
@@ -161,9 +203,7 @@ end;
 $func$;
 
 -- ---------------------------------------------------------- criar a sala
--- Quem cria ja entra como primeiro participante.
 create or replace function public.criar_sala(
-  p_nome text,
   p_data date default null
 )
 returns json
@@ -172,45 +212,30 @@ security definer
 set search_path = public, extensions
 as $func$
 declare
-  v_nome text := btrim(regexp_replace(coalesce(p_nome, ''), '\s+', ' ', 'g'));
+  v_uid uuid := auth.uid();
+  v_nome text;
   v_sala public.salas;
   v_part public.participantes;
-  v_admin uuid;
-  v_token uuid;
 begin
-  if length(v_nome) < 2 then raise exception 'NOME_CURTO'; end if;
+  if v_uid is null then raise exception 'NAO_LOGADO'; end if;
+  select nome into v_nome from public.perfis where id = v_uid;
+  if v_nome is null then raise exception 'SEM_PERFIL'; end if;
 
-  insert into public.salas (codigo, nome_criador, data_festa)
-  values (public.gerar_codigo(), v_nome, p_data)
+  insert into public.salas (codigo, admin_id, nome_criador, data_festa)
+  values (public.gerar_codigo(), v_uid, v_nome, p_data)
   returning * into v_sala;
 
-  insert into public.salas_admin (sala_id)
-  values (v_sala.id)
-  returning admin_token into v_admin;
-
-  insert into public.participantes (sala_id, nome, eh_admin)
-  values (v_sala.id, v_nome, true)
+  insert into public.participantes (sala_id, user_id, nome, eh_admin)
+  values (v_sala.id, v_uid, v_nome, true)
   returning * into v_part;
 
-  insert into public.segredos (participante_id)
-  values (v_part.id)
-  returning token into v_token;
-
-  return json_build_object(
-    'sala_id', v_sala.id,
-    'codigo', v_sala.codigo,
-    'participante_id', v_part.id,
-    'token', v_token,
-    'admin_token', v_admin
-  );
+  return json_build_object('sala_id', v_sala.id, 'codigo', v_sala.codigo);
 end;
 $func$;
 
--- ------------------------------------------- entrar na sala com meu nome
--- E a unica forma de alguem entrar na lista: pelo proprio celular.
+-- ------------------------------------------- entrar numa sala existente
 create or replace function public.entrar_na_sala(
-  p_codigo text,
-  p_nome text
+  p_codigo text
 )
 returns json
 language plpgsql
@@ -218,64 +243,48 @@ security definer
 set search_path = public, extensions
 as $func$
 declare
-  v_nome text := btrim(regexp_replace(coalesce(p_nome, ''), '\s+', ' ', 'g'));
+  v_uid uuid := auth.uid();
+  v_nome text;
   v_sala public.salas;
   v_part public.participantes;
-  v_token uuid;
 begin
-  if length(v_nome) < 2 then raise exception 'NOME_CURTO'; end if;
+  if v_uid is null then raise exception 'NAO_LOGADO'; end if;
+  select nome into v_nome from public.perfis where id = v_uid;
+  if v_nome is null then raise exception 'SEM_PERFIL'; end if;
 
   select * into v_sala from public.salas where codigo = upper(btrim(p_codigo));
   if v_sala is null then raise exception 'SALA_NAO_ENCONTRADA'; end if;
-  if v_sala.sorteada then raise exception 'JA_SORTEADA'; end if;
 
-  if exists (
-    select 1 from public.participantes
-     where sala_id = v_sala.id and lower(nome) = lower(v_nome)
-  ) then
-    raise exception 'NOME_REPETIDO';
+  -- ja esta na sala: idempotente, so devolve o id
+  select * into v_part from public.participantes
+   where sala_id = v_sala.id and user_id = v_uid;
+  if v_part.id is not null then
+    return json_build_object('sala_id', v_sala.id, 'ja_estava', true);
   end if;
 
-  insert into public.participantes (sala_id, nome)
-  values (v_sala.id, v_nome)
-  returning * into v_part;
+  if v_sala.sorteada then raise exception 'JA_SORTEADA'; end if;
 
-  insert into public.segredos (participante_id)
-  values (v_part.id)
-  returning token into v_token;
+  insert into public.participantes (sala_id, user_id, nome)
+  values (v_sala.id, v_uid, v_nome);
 
-  return json_build_object(
-    'sala_id', v_sala.id,
-    'participante_id', v_part.id,
-    'token', v_token
-  );
+  return json_build_object('sala_id', v_sala.id, 'ja_estava', false);
 end;
 $func$;
 
--- --------------------------------------------- conferencia interna da chave
-create or replace function public.checar_token(
-  p_participante_id uuid,
-  p_token uuid
-)
-returns public.segredos
-language plpgsql
+-- ------------------------------------- o participante do usuario na sala
+create or replace function public.meu_participante(p_sala_id uuid)
+returns public.participantes
+language sql
 security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
-declare
-  v_s public.segredos;
-begin
-  select * into v_s from public.segredos where participante_id = p_participante_id;
-  if v_s is null then raise exception 'PARTICIPANTE_NAO_ENCONTRADO'; end if;
-  if v_s.token <> p_token then raise exception 'CHAVE_INVALIDA'; end if;
-  return v_s;
-end;
+  select * from public.participantes
+   where sala_id = p_sala_id and user_id = auth.uid();
 $func$;
 
--- ----------------------------------------------------- escrever minha dica
+-- ----------------------------------------------------- escrever a dica
 create or replace function public.definir_dica(
-  p_participante_id uuid,
-  p_token uuid,
+  p_sala_id uuid,
   p_dica text
 )
 returns json
@@ -283,156 +292,89 @@ language plpgsql
 security definer
 set search_path = public, extensions
 as $func$
+declare
+  v_part public.participantes;
 begin
-  perform public.checar_token(p_participante_id, p_token);
+  v_part := public.meu_participante(p_sala_id);
+  if v_part.id is null then raise exception 'NAO_PARTICIPA'; end if;
 
-  update public.segredos
-     set dica = nullif(btrim(p_dica), '')
-   where participante_id = p_participante_id;
+  insert into public.dicas (participante_id, dica)
+  values (v_part.id, nullif(btrim(p_dica), ''))
+  on conflict (participante_id)
+  do update set dica = excluded.dica;
 
   return json_build_object('ok', true);
 end;
 $func$;
 
--- ------------------------------------------------- ler a minha propria dica
-create or replace function public.minha_dica(
-  p_participante_id uuid,
-  p_token uuid
-)
+-- --------------------------------------------------- ler a minha dica
+create or replace function public.minha_dica(p_sala_id uuid)
 returns json
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
 declare
-  v_s public.segredos;
+  v_part public.participantes;
+  v_dica text;
 begin
-  v_s := public.checar_token(p_participante_id, p_token);
-  return json_build_object('dica', v_s.dica);
+  v_part := public.meu_participante(p_sala_id);
+  if v_part.id is null then raise exception 'NAO_PARTICIPA'; end if;
+  select dica into v_dica from public.dicas where participante_id = v_part.id;
+  return json_build_object('dica', v_dica);
 end;
 $func$;
 
--- ------------------------------------------------------- sair da sala (eu)
-create or replace function public.sair_da_sala(
-  p_participante_id uuid,
-  p_token uuid
-)
+-- ------------------------------------------------------ sair da sala
+create or replace function public.sair_da_sala(p_sala_id uuid)
 returns json
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
 declare
-  v_p public.participantes;
+  v_part public.participantes;
   v_sala public.salas;
 begin
-  perform public.checar_token(p_participante_id, p_token);
-
-  select * into v_p from public.participantes where id = p_participante_id;
-  select * into v_sala from public.salas where id = v_p.sala_id;
-
-  if v_sala.sorteada then raise exception 'JA_SORTEADA'; end if;
-  if v_p.eh_admin then raise exception 'ADMIN_NAO_SAI'; end if;
-
-  delete from public.participantes where id = p_participante_id;
-  return json_build_object('ok', true);
-end;
-$func$;
-
--- ------------------------------------- organizador tira alguem da lista
-create or replace function public.remover_participante(
-  p_sala_id uuid,
-  p_admin_token uuid,
-  p_participante_id uuid
-)
-returns json
-language plpgsql
-security definer
-set search_path = public, extensions
-as $func$
-declare
-  v_sala public.salas;
-begin
-  if not exists (
-    select 1 from public.salas_admin
-     where sala_id = p_sala_id and admin_token = p_admin_token
-  ) then
-    raise exception 'SEM_PERMISSAO';
-  end if;
+  v_part := public.meu_participante(p_sala_id);
+  if v_part.id is null then raise exception 'NAO_PARTICIPA'; end if;
 
   select * into v_sala from public.salas where id = p_sala_id;
   if v_sala.sorteada then raise exception 'JA_SORTEADA'; end if;
+  if v_part.eh_admin then raise exception 'ADMIN_NAO_SAI'; end if;
 
-  delete from public.participantes
-   where id = p_participante_id
-     and sala_id = p_sala_id
-     and eh_admin = false;
-
+  delete from public.participantes where id = v_part.id;
   return json_build_object('ok', true);
 end;
 $func$;
 
--- ------------------------- organizador libera um nome (celular perdido)
--- Nao devolve chave nenhuma para o organizador: ele so destrava o nome,
--- e quem reassume e a propria pessoa, no celular dela.
-create or replace function public.liberar_nome(
+-- ---------------------------- organizador tira alguem da lista
+create or replace function public.remover_participante(
   p_sala_id uuid,
-  p_admin_token uuid,
   p_participante_id uuid
 )
 returns json
 language plpgsql
 security definer
-set search_path = public, extensions
-as $func$
-begin
-  if not exists (
-    select 1 from public.salas_admin
-     where sala_id = p_sala_id and admin_token = p_admin_token
-  ) then
-    raise exception 'SEM_PERMISSAO';
-  end if;
-
-  update public.participantes
-     set liberado = true
-   where id = p_participante_id and sala_id = p_sala_id;
-
-  if not found then raise exception 'PARTICIPANTE_NAO_ENCONTRADO'; end if;
-
-  return json_build_object('ok', true);
-end;
-$func$;
-
--- ------------------------------- reassumir um nome liberado, num celular
-create or replace function public.recuperar_nome(
-  p_participante_id uuid
-)
-returns json
-language plpgsql
-security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
 declare
-  v_p public.participantes;
-  v_token uuid := gen_random_uuid();
+  v_sala public.salas;
 begin
-  select * into v_p from public.participantes where id = p_participante_id;
-  if v_p is null then raise exception 'PARTICIPANTE_NAO_ENCONTRADO'; end if;
-  if not v_p.liberado then raise exception 'NOME_NAO_LIBERADO'; end if;
+  select * into v_sala from public.salas where id = p_sala_id;
+  if v_sala is null then raise exception 'SALA_NAO_ENCONTRADA'; end if;
+  if v_sala.admin_id <> auth.uid() then raise exception 'SEM_PERMISSAO'; end if;
+  if v_sala.sorteada then raise exception 'JA_SORTEADA'; end if;
 
-  update public.segredos set token = v_token where participante_id = p_participante_id;
-  update public.participantes set liberado = false where id = p_participante_id;
+  delete from public.participantes
+   where id = p_participante_id and sala_id = p_sala_id and eh_admin = false;
 
-  return json_build_object('participante_id', p_participante_id, 'token', v_token);
+  return json_build_object('ok', true);
 end;
 $func$;
 
--- ------------------------------------------------------------ O SORTEIO
--- Embaralha no servidor e refaz enquanto alguem estiver tirando a si mesmo.
-create or replace function public.realizar_sorteio(
-  p_sala_id uuid,
-  p_admin_token uuid
-)
+-- --------------------------------------------------------- O SORTEIO
+create or replace function public.realizar_sorteio(p_sala_id uuid)
 returns json
 language plpgsql
 security definer
@@ -447,17 +389,9 @@ declare
   v_ok boolean;
   v_voltas int := 0;
 begin
-  -- trava a linha da sala: dois cliques simultaneos nao geram dois sorteios
   select * into v_sala from public.salas where id = p_sala_id for update;
   if v_sala is null then raise exception 'SALA_NAO_ENCONTRADA'; end if;
-
-  if not exists (
-    select 1 from public.salas_admin
-     where sala_id = p_sala_id and admin_token = p_admin_token
-  ) then
-    raise exception 'SEM_PERMISSAO';
-  end if;
-
+  if v_sala.admin_id <> auth.uid() then raise exception 'SEM_PERMISSAO'; end if;
   if v_sala.sorteada then raise exception 'JA_SORTEADA'; end if;
 
   select array_agg(id order by criado_em, id) into v_ids
@@ -469,15 +403,10 @@ begin
   loop
     v_voltas := v_voltas + 1;
     select array_agg(x order by random()) into v_emb from unnest(v_ids) as t(x);
-
     v_ok := true;
     for v_i in 1..v_n loop
-      if v_ids[v_i] = v_emb[v_i] then
-        v_ok := false;
-        exit;
-      end if;
+      if v_ids[v_i] = v_emb[v_i] then v_ok := false; exit; end if;
     end loop;
-
     exit when v_ok;
     if v_voltas > 2000 then raise exception 'SORTEIO_FALHOU'; end if;
   end loop;
@@ -487,175 +416,110 @@ begin
     values (p_sala_id, v_ids[v_i], v_emb[v_i]);
   end loop;
 
-  update public.salas
-     set sorteada = true, sorteada_em = now()
-   where id = p_sala_id;
-
-  return json_build_object('ok', true, 'total', v_n, 'voltas', v_voltas);
+  update public.salas set sorteada = true, sorteada_em = now() where id = p_sala_id;
+  return json_build_object('ok', true, 'total', v_n);
 end;
 $func$;
 
--- ------------------------------------------------- ver quem eu tirei
-create or replace function public.ver_resultado(
-  p_participante_id uuid,
-  p_token uuid
-)
+-- ----------------------------------------------- ver quem eu tirei
+create or replace function public.ver_resultado(p_sala_id uuid)
 returns json
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
 declare
+  v_part public.participantes;
   v_nome text;
   v_dica text;
 begin
-  perform public.checar_token(p_participante_id, p_token);
+  v_part := public.meu_participante(p_sala_id);
+  if v_part.id is null then raise exception 'NAO_PARTICIPA'; end if;
 
-  select alvo.nome, seg.dica
+  select alvo.nome, d.dica
     into v_nome, v_dica
     from public.sorteios s
     join public.participantes alvo on alvo.id = s.para_id
-    left join public.segredos seg on seg.participante_id = alvo.id
-   where s.de_id = p_participante_id;
+    left join public.dicas d on d.participante_id = alvo.id
+   where s.de_id = v_part.id;
 
   if v_nome is null then raise exception 'SORTEIO_NAO_REALIZADO'; end if;
 
   update public.participantes
-     set viu_resultado = true,
-         visto_em      = coalesce(visto_em, now())
-   where id = p_participante_id;
+     set viu_resultado = true, visto_em = coalesce(visto_em, now())
+   where id = v_part.id;
 
   return json_build_object('nome', v_nome, 'dica', v_dica);
 end;
 $func$;
 
--- -------------------------------- assumir o acesso por link pessoal
--- O link pessoal e de USO UNICO: ao ser usado, a chave antiga morre e
--- uma nova nasce. Assim, se o link vazar e um curioso clicar, o celular
--- da dona para de funcionar na hora e ela percebe, em vez de ser
--- espionada em silencio. O link vazado tambem ja nao serve a ninguem.
-create or replace function public.assumir_link(
-  p_participante_id uuid,
-  p_token uuid
-)
+-- --------------------------------------- desfazer o sorteio
+create or replace function public.reabrir_sala(p_sala_id uuid)
 returns json
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
 declare
-  v_novo uuid := gen_random_uuid();
-  v_nome text;
-begin
-  perform public.checar_token(p_participante_id, p_token);
-
-  update public.segredos
-     set token = v_novo
-   where participante_id = p_participante_id;
-
-  select nome into v_nome from public.participantes where id = p_participante_id;
-
-  return json_build_object(
-    'participante_id', p_participante_id,
-    'token', v_novo,
-    'nome', v_nome
-  );
-end;
-$func$;
-
--- ------------------------------------------- desfazer o sorteio
--- Só vale enquanto ninguem tiver aberto o resultado. Depois que alguem
--- viu, refazer vazaria informacao: aí o caminho e apagar a sala.
-create or replace function public.reabrir_sala(
-  p_sala_id uuid,
-  p_admin_token uuid
-)
-returns json
-language plpgsql
-security definer
-set search_path = public, extensions
-as $func$
-declare
+  v_sala public.salas;
   v_viram int;
 begin
-  if not exists (
-    select 1 from public.salas_admin
-     where sala_id = p_sala_id and admin_token = p_admin_token
-  ) then
-    raise exception 'SEM_PERMISSAO';
-  end if;
+  select * into v_sala from public.salas where id = p_sala_id;
+  if v_sala is null then raise exception 'SALA_NAO_ENCONTRADA'; end if;
+  if v_sala.admin_id <> auth.uid() then raise exception 'SEM_PERMISSAO'; end if;
 
-  select count(*) into v_viram
-    from public.participantes
+  select count(*) into v_viram from public.participantes
    where sala_id = p_sala_id and viu_resultado = true;
-
   if v_viram > 0 then raise exception 'ALGUEM_JA_VIU'; end if;
 
   delete from public.sorteios where sala_id = p_sala_id;
-
-  update public.salas
-     set sorteada = false, sorteada_em = null
-   where id = p_sala_id;
-
+  update public.salas set sorteada = false, sorteada_em = null where id = p_sala_id;
   return json_build_object('ok', true);
 end;
 $func$;
 
--- ------------------------------------------------ apagar a sala inteira
--- Leva junto participantes, chaves, dicas e o sorteio (on delete cascade).
-create or replace function public.apagar_sala(
-  p_sala_id uuid,
-  p_admin_token uuid
-)
+-- --------------------------------------- apagar a sala inteira
+create or replace function public.apagar_sala(p_sala_id uuid)
 returns json
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = public
 as $func$
+declare
+  v_sala public.salas;
 begin
-  if not exists (
-    select 1 from public.salas_admin
-     where sala_id = p_sala_id and admin_token = p_admin_token
-  ) then
-    raise exception 'SEM_PERMISSAO';
-  end if;
+  select * into v_sala from public.salas where id = p_sala_id;
+  if v_sala is null then raise exception 'SALA_NAO_ENCONTRADA'; end if;
+  if v_sala.admin_id <> auth.uid() then raise exception 'SEM_PERMISSAO'; end if;
 
   delete from public.salas where id = p_sala_id;
-
   return json_build_object('ok', true);
 end;
 $func$;
 
 -- ------------------------------------------------------------ permissoes
 revoke all on function public.gerar_codigo() from public;
-revoke all on function public.checar_token(uuid, uuid) from public;
+revoke all on function public.meu_participante(uuid) from public;
+revoke all on function public.handle_new_user() from public, anon, authenticated;
 
-grant execute on function public.criar_sala(text, date)                   to anon, authenticated;
-grant execute on function public.entrar_na_sala(text, text)               to anon, authenticated;
-grant execute on function public.definir_dica(uuid, uuid, text)           to anon, authenticated;
-grant execute on function public.minha_dica(uuid, uuid)                   to anon, authenticated;
-grant execute on function public.sair_da_sala(uuid, uuid)                 to anon, authenticated;
-grant execute on function public.remover_participante(uuid, uuid, uuid)   to anon, authenticated;
-grant execute on function public.liberar_nome(uuid, uuid, uuid)           to anon, authenticated;
-grant execute on function public.recuperar_nome(uuid)                     to anon, authenticated;
-grant execute on function public.realizar_sorteio(uuid, uuid)             to anon, authenticated;
-grant execute on function public.ver_resultado(uuid, uuid)                to anon, authenticated;
-grant execute on function public.assumir_link(uuid, uuid)                 to anon, authenticated;
-grant execute on function public.reabrir_sala(uuid, uuid)                 to anon, authenticated;
-grant execute on function public.apagar_sala(uuid, uuid)                  to anon, authenticated;
+grant execute on function public.criar_sala(date)                    to authenticated;
+grant execute on function public.entrar_na_sala(text)                to authenticated;
+grant execute on function public.definir_dica(uuid, text)            to authenticated;
+grant execute on function public.minha_dica(uuid)                    to authenticated;
+grant execute on function public.sair_da_sala(uuid)                  to authenticated;
+grant execute on function public.remover_participante(uuid, uuid)    to authenticated;
+grant execute on function public.realizar_sorteio(uuid)              to authenticated;
+grant execute on function public.ver_resultado(uuid)                 to authenticated;
+grant execute on function public.reabrir_sala(uuid)                  to authenticated;
+grant execute on function public.apagar_sala(uuid)                   to authenticated;
 
 -- ============================================================ TEMPO REAL
--- Somente as tabelas publicas entram. As secretas nunca sao transmitidas.
 do $bloco$
 begin
-  begin
-    alter publication supabase_realtime add table public.participantes;
-  exception when duplicate_object then null;
-  end;
-  begin
-    alter publication supabase_realtime add table public.salas;
-  exception when duplicate_object then null;
-  end;
+  begin alter publication supabase_realtime add table public.participantes;
+  exception when duplicate_object then null; end;
+  begin alter publication supabase_realtime add table public.salas;
+  exception when duplicate_object then null; end;
 end;
 $bloco$;
 

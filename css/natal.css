@@ -502,6 +502,101 @@ textarea.campo {
   margin-top: 5px;
 }
 
+/* ------------------------------------------------- login: abas ------- */
+.abas {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  background: rgba(4, 12, 24, .45);
+  border: 1px solid rgba(244, 248, 255, .1);
+  border-radius: var(--raio-p);
+  padding: 5px;
+}
+
+.aba {
+  flex: 1;
+  padding: 11px 10px;
+  font-family: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--neve-suave);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: background .18s, color .18s;
+}
+
+.aba.ativa {
+  color: #06121f;
+  background: linear-gradient(140deg, var(--ouro-claro), var(--ouro));
+}
+
+/* --------------------------------------------- login: PIN e extras --- */
+.campo-pin {
+  text-align: center;
+  letter-spacing: .5em;
+  font-family: "Courier New", monospace;
+  font-size: 22px;
+  padding-left: 15px;      /* compensa o letter-spacing pra centrar */
+}
+
+.lembrar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 2px 0 16px;
+  font-size: 14px;
+  color: var(--neve-suave);
+  cursor: pointer;
+  user-select: none;
+}
+
+.lembrar input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--ouro);
+  cursor: pointer;
+}
+
+.link-texto {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 6px;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ouro);
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  text-align: center;
+}
+
+.link-texto:hover { text-decoration: underline; }
+
+/* ---------------------------------------------------------- barra conta */
+.barra-conta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 10px 16px;
+  font-size: 15px;
+  color: var(--texto, #eaf1fb);
+  background: rgba(255, 255, 255, .05);
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 14px;
+}
+
+.barra-conta .link-texto {
+  display: inline;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
 /* --------------------------------------------------------------- botões */
 .btn {
   display: inline-flex;

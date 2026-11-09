@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Amigo Secreto de Natal</title>
-<meta name="description" content="Organize o amigo secreto do seu grupo pelo celular. Sem app, sem cadastro: cria a sala, manda o link no WhatsApp e o sorteio sai na hora.">
+<meta name="description" content="Organize o amigo secreto do seu grupo pelo celular. Entre com sua conta, crie a sala, mande o link no WhatsApp e o sorteio sai na hora.">
 <meta name="theme-color" content="#071324">
 
 <meta property="og:type" content="website">
@@ -27,29 +27,28 @@
   <header class="marca">
     <span class="arvore" aria-hidden="true">&#127876;</span>
     <h1>Amigo Secreto de Natal</h1>
-    <p>Cria a sala, manda o link no grupo e pronto.<br>Sem baixar nada, sem cadastro.</p>
+    <p>Crie a sala, mande o link no grupo e pronto.<br>Sua conta serve pra qualquer sala.</p>
   </header>
 
   <div data-conteudo>
+
+    <!-- ------------------------------------------------- conta logada -->
+    <div class="barra-conta escondido" id="barra-conta">
+      <span>Olá, <strong id="ola-nome">...</strong> &#128075;</span>
+      <button class="link-texto" type="button" id="btn-sair-conta" style="margin:0">Sair</button>
+    </div>
 
     <!-- ------------------------------------------------- criar sala -->
     <section class="cartao">
       <h2>&#127873; Criar uma sala nova</h2>
       <p class="ajuda">
-        Voce vira o organizador da sala. Depois de criar, o site gera um
-        codigo e um link para voce mandar no grupo do WhatsApp.
+        Você vira o organizador da sala. Depois de criar, o site gera um
+        código e um link para você mandar no grupo do WhatsApp.
       </p>
 
       <form id="form-criar" novalidate>
         <div class="campo-grupo">
-          <label for="nome">Seu nome</label>
-          <input class="campo" type="text" id="nome" name="nome"
-                 placeholder="Ex.: Bruno" maxlength="40"
-                 autocomplete="name" required>
-        </div>
-
-        <div class="campo-grupo">
-          <label for="data">Data da festa</label>
+          <label for="data">Data da festa (opcional)</label>
           <input class="campo" type="date" id="data" name="data">
         </div>
 
@@ -65,13 +64,13 @@
     <section class="cartao escuro">
       <h2>&#128273; Entrar numa sala</h2>
       <p class="ajuda">
-        Recebeu o codigo de 6 caracteres no grupo? Digite aqui.
-        Se recebeu o link, basta abrir que voce entra direto.
+        Recebeu o código de 6 caracteres no grupo? Digite aqui.
+        Se recebeu o link, basta abrir que você entra direto.
       </p>
 
       <form id="form-entrar" novalidate>
         <div class="campo-grupo">
-          <label for="codigo">Codigo da sala</label>
+          <label for="codigo">Código da sala</label>
           <input class="campo" type="text" id="codigo" name="codigo"
                  placeholder="A4F9K2" maxlength="7"
                  autocapitalize="characters" autocomplete="off"
@@ -86,10 +85,10 @@
       </form>
     </section>
 
-    <!-- -------------------------------------------- salas que visitei -->
+    <!-- -------------------------------------------- minhas salas -->
     <section class="cartao escuro escondido" id="secao-minhas">
       <h2>&#128220; Suas salas</h2>
-      <p class="ajuda">Salas que voce abriu neste celular.</p>
+      <p class="ajuda">Salas da sua conta. Aparecem em qualquer aparelho que você entrar.</p>
       <ul class="lista" id="lista-minhas"></ul>
     </section>
 
@@ -97,19 +96,19 @@
     <section class="cartao escuro">
       <h2>&#10052; Como funciona</h2>
       <ul class="lista" style="gap:7px">
-        <li><span class="bolinha">1</span><span class="nome" style="white-space:normal">Alguem cria a sala e manda o link no grupo</span></li>
-        <li><span class="bolinha">2</span><span class="nome" style="white-space:normal">Cada pessoa abre o link e entra com o proprio nome</span></li>
+        <li><span class="bolinha">1</span><span class="nome" style="white-space:normal">Alguém cria a sala e manda o link no grupo</span></li>
+        <li><span class="bolinha">2</span><span class="nome" style="white-space:normal">Cada pessoa abre o link, entra com a conta e participa</span></li>
         <li><span class="bolinha">3</span><span class="nome" style="white-space:normal">A lista cresce ao vivo na tela de todo mundo</span></li>
         <li><span class="bolinha">4</span><span class="nome" style="white-space:normal">O organizador sorteia e a sala trava</span></li>
-        <li><span class="bolinha">5</span><span class="nome" style="white-space:normal">Cada um ve so quem tirou, no proprio celular</span></li>
+        <li><span class="bolinha">5</span><span class="nome" style="white-space:normal">Cada um vê só quem tirou, no próprio celular</span></li>
       </ul>
     </section>
 
   </div>
 
   <footer class="rodape">
-    Feito com cafe e espirito natalino &#127861;<br>
-    O resultado fica salvo: pode voltar no dia da festa que estara aqui.
+    Feito com café e espírito natalino &#127861;<br>
+    O resultado fica salvo: pode voltar no dia da festa que estará aqui.
   </footer>
 
 </main>
@@ -117,6 +116,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/config.js"></script>
 <script src="js/comum.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/index.js"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Sala do Amigo Secreto</title>
-<meta name="description" content="Sala do amigo secreto: cada um entra com o proprio nome e ve so quem tirou.">
+<meta name="description" content="Sala do amigo secreto: entre com sua conta e veja so quem voce tirou.">
 <meta name="theme-color" content="#071324">
 <meta name="robots" content="noindex">
 
@@ -38,39 +38,22 @@
     <!-- =================================================== a sala -->
     <div id="tela-sala" class="escondido">
 
-      <!-- --------------------------------------- entrar com meu nome -->
+      <!-- --------------------------------------- participar -->
       <section class="cartao" id="secao-entrar">
-        <h2>&#128075; Entre com o seu nome</h2>
+        <h2>&#128075; Participar desta sala</h2>
         <p class="ajuda">
-          Escreva o seu nome do jeito que o pessoal te chama. Só você pode
-          se colocar na lista &mdash; ninguém entra no lugar de ninguém.
+          Você entra como <strong id="entrar-como">você</strong> (o nome da sua
+          conta). É só confirmar que você já cai na lista.
         </p>
-
-        <form id="form-entrar" novalidate>
-          <div class="campo-grupo">
-            <label for="meu-nome">Seu nome</label>
-            <input class="campo" type="text" id="meu-nome"
-                   placeholder="Ex.: Bruno" maxlength="40"
-                   autocomplete="name">
-          </div>
-
-          <div class="campo-grupo">
-            <label for="minha-dica">Dica para quem me tirar (opcional)</label>
-            <textarea class="campo" id="minha-dica" maxlength="180"
-                      placeholder="Ex.: gosto de livro e cafe, e nao precisa ser nada caro kkkk"></textarea>
-            <div class="contador"><span id="conta-entrar">0</span>/180</div>
-          </div>
-
-          <button class="btn" type="submit" id="btn-entrar">
-            &#127873; Participar do amigo secreto
-          </button>
-        </form>
+        <button class="btn" id="btn-participar">
+          &#127873; Participar do amigo secreto
+        </button>
       </section>
 
       <!-- ------------------------------------- codigo e convite -->
       <section class="cartao escuro" id="cartao-convite">
         <div class="codigo-caixa">
-          <small>Chame o pessoal com este codigo</small>
+          <small>Chame o pessoal com este código</small>
           <div class="codigo" id="codigo-sala">......</div>
         </div>
 
@@ -89,51 +72,15 @@
       <!-- --------------------------------------- sala travada -->
       <div class="aviso ouro escondido" id="aviso-travada">
         <span class="icone">&#128274;</span>
-        <span><strong>Sorteio feito!</strong> A lista esta travada: ninguem
-        entra, sai ou muda de lugar. Agora e so cada um ver quem tirou.</span>
-      </div>
-
-      <!-- ------------------------------- guarde o seu link pessoal -->
-      <section class="cartao escondido" id="secao-meu-link">
-        <h2>&#128273; Guarde o seu acesso</h2>
-        <p class="ajuda" id="ajuda-meu-link">
-          Mande este link para voce mesmo no WhatsApp. Se trocar de celular,
-          limpar o navegador ou abrir numa aba anonima, e por ele que voce volta
-          &mdash; sem depender de ninguem.
-        </p>
-
-        <div class="aviso">
-          <span class="icone">&#9888;</span>
-          <span>Esse link e <strong>so seu</strong>. Quem abrir ele entra como
-          voce e ve quem voce tirou. Nao cole no grupo.</span>
-        </div>
-
-        <div class="btn-linha">
-          <button class="btn btn-ouro btn-pequeno" id="btn-link-whatsapp" style="width:auto">
-            &#128241; Mandar para mim no WhatsApp
-          </button>
-          <button class="btn btn-fantasma btn-pequeno" id="btn-link-copiar" style="width:auto">
-            &#128203; Copiar
-          </button>
-        </div>
-
-        <button class="btn btn-fantasma btn-pequeno" id="btn-link-guardei"
-                style="width:auto;margin-top:10px">
-          Ja guardei, pode esconder
-        </button>
-      </section>
-
-      <!-- --------------------------- perdi o acesso / nome liberado -->
-      <div class="aviso escondido" id="aviso-liberado">
-        <span class="icone">&#128273;</span>
-        <span id="texto-liberado"></span>
+        <span><strong>Sorteio feito!</strong> A lista está travada: ninguém
+        entra, sai ou muda de lugar. Agora é só cada um ver quem tirou.</span>
       </div>
 
       <!-- ------------------------------------- ver quem eu tirei -->
       <section class="cartao escondido" id="secao-revelar">
         <h2>&#127873; Chegou a sua vez</h2>
         <p class="ajuda" id="texto-revelar">
-          Toque no presente e descubra quem voce tirou.
+          Toque no presente e descubra quem você tirou.
         </p>
         <div class="presente">
           <span class="caixa" id="presente" role="button" tabindex="0"
@@ -146,7 +93,7 @@
 
       <!-- ----------------------------------------- participantes -->
       <section class="cartao escuro">
-        <h2>&#128101; Ja entraram <span id="contador-pessoas" class="selo"></span></h2>
+        <h2>&#128101; Já entraram <span id="contador-pessoas" class="selo"></span></h2>
         <p class="ajuda" id="ajuda-lista">
           A lista cresce sozinha conforme o pessoal vai abrindo o link.
           Aparece na hora no celular de todos.
@@ -159,8 +106,8 @@
       <section class="cartao escuro escondido" id="secao-dica">
         <h2>&#128172; Sua dica de presente</h2>
         <p class="ajuda">
-          So quem te tirou vai ler isso. Serve para dar uma pista, ou para
-          avisar algo tipo "nao precisa ser nada caro".
+          Só quem te tirou vai ler isso. Serve para dar uma pista, ou para
+          avisar algo tipo "não precisa ser nada caro".
         </p>
         <div id="dica-atual" class="dica-balao escondido"></div>
         <button class="btn btn-fantasma" id="btn-editar-dica">
@@ -172,7 +119,7 @@
       <section class="cartao escondido" id="secao-sortear">
         <h2>&#127920; Realizar o sorteio</h2>
         <p class="ajuda" id="ajuda-sortear">
-          Confira se todo mundo ja entrou. Depois do sorteio nao da mais
+          Confira se todo mundo já entrou. Depois do sorteio não dá mais
           para mudar nada, e cada um vai poder ver quem tirou.
         </p>
         <button class="btn" id="btn-sortear">
@@ -184,8 +131,8 @@
       <section class="cartao escuro escondido" id="secao-admin">
         <h2>&#128273; Painel do organizador</h2>
         <p class="ajuda" id="ajuda-admin">
-          Voce ve quem ja abriu o resultado, mas nunca quem tirou quem.
-          Nem voce consegue espiar &mdash; isso fica guardado no servidor.
+          Você vê quem já abriu o resultado, mas nunca quem tirou quem.
+          Nem você consegue espiar &mdash; isso fica guardado no servidor.
         </p>
         <ul class="lista" id="lista-admin"></ul>
       </section>
@@ -206,13 +153,10 @@
 
       <div class="btn-linha" style="margin-top:4px">
         <a class="btn btn-fantasma btn-pequeno" href="index.html" style="width:auto;text-decoration:none">
-          &#8592; Pagina inicial
+          &#8592; Minhas salas
         </a>
-        <button class="btn btn-fantasma btn-pequeno escondido" id="btn-meu-acesso" style="width:auto">
-          &#128273; Meu acesso
-        </button>
         <button class="btn btn-fantasma btn-pequeno escondido" id="btn-sair" style="width:auto">
-          Sair da sala
+          Sair desta sala
         </button>
       </div>
 
@@ -221,12 +165,12 @@
     <!-- ============================================ sala nao existe -->
     <div id="tela-erro" class="escondido">
       <section class="cartao escuro">
-        <h2>&#128533; Sala nao encontrada</h2>
+        <h2>&#128533; Sala não encontrada</h2>
         <p class="ajuda" id="texto-erro">
-          Esse codigo nao existe. Confira o link que mandaram no grupo.
+          Esse código não existe. Confira o link que mandaram no grupo.
         </p>
         <a class="btn btn-ouro" href="index.html" style="text-decoration:none">
-          Voltar para o inicio
+          Voltar para o início
         </a>
       </section>
     </div>
@@ -245,10 +189,10 @@
 <!-- tem alguem olhando? -->
 <div class="cortina" id="modal-aviso">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-aviso">
-    <h3 id="titulo-aviso">&#128064; Alguem esta olhando?</h3>
+    <h3 id="titulo-aviso">&#128064; Alguém está olhando?</h3>
     <p class="ajuda">
-      O nome de quem voce tirou vai aparecer na tela. Confira se ninguem
-      esta espiando o seu celular antes de continuar.
+      O nome de quem você tirou vai aparecer na tela. Confira se ninguém
+      está espiando o seu celular antes de continuar.
     </p>
     <div class="btn-linha">
       <button class="btn btn-ouro" id="btn-estou-sozinho">Estou sozinho, mostrar</button>
@@ -261,7 +205,7 @@
 <div class="cortina" id="modal-resultado">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-resultado">
     <div class="resultado">
-      <div class="rotulo" id="titulo-resultado">Voce tirou</div>
+      <div class="rotulo" id="titulo-resultado">Você tirou</div>
       <div class="sorteado" id="nome-sorteado">...</div>
     </div>
 
@@ -272,7 +216,7 @@
 
     <div class="aviso" style="margin-top:16px">
       <span class="icone">&#129323;</span>
-      <span>Agora e segredo! Nao conta para ninguem.</span>
+      <span>Agora é segredo! Não conta para ninguém.</span>
     </div>
 
     <button class="btn btn-ouro" id="btn-resultado-whatsapp" style="margin-bottom:10px">
@@ -289,34 +233,12 @@
     <p class="ajuda" id="resumo-sortear">...</p>
     <div class="aviso">
       <span class="icone">&#128274;</span>
-      <span>Depois disso a lista trava de vez. Quem nao entrou ate agora
-      fica de fora, e nao da para refazer o sorteio.</span>
+      <span>Depois disso a lista trava de vez. Quem não entrou até agora
+      fica de fora, e não dá para refazer o sorteio.</span>
     </div>
     <div class="btn-linha">
       <button class="btn" id="btn-confirmar-sorteio">Sim, sortear agora</button>
-      <button class="btn btn-fantasma" data-fechar="modal-sortear">Ainda nao</button>
-    </div>
-  </div>
-</div>
-
-<!-- assumir o acesso por link pessoal -->
-<div class="cortina" id="modal-assumir">
-  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-assumir">
-    <h3 id="titulo-assumir">&#128273; Voce e <span id="nome-assumir">...</span>?</h3>
-    <p class="ajuda">
-      Voce abriu um link pessoal. Se confirmar, este aparelho passa a ser o seu
-      acesso nesta sala.
-    </p>
-
-    <div class="aviso">
-      <span class="icone">&#9888;</span>
-      <span>O aparelho antigo <strong>vai perder o acesso</strong>, e este link
-      deixa de funcionar. Voce recebe um link novo para guardar.</span>
-    </div>
-
-    <div class="btn-linha">
-      <button class="btn btn-ouro" id="btn-confirmar-assumir">Sim, sou eu</button>
-      <button class="btn btn-fantasma" data-fechar="modal-assumir">Nao sou eu</button>
+      <button class="btn btn-fantasma" data-fechar="modal-sortear">Ainda não</button>
     </div>
   </div>
 </div>
@@ -327,11 +249,11 @@
     <h3 id="titulo-apagar">&#128465; Apagar a sala?</h3>
     <p class="ajuda">
       Isso apaga a sala para <strong>todo mundo</strong>: a lista, as dicas e o
-      sorteio. O link e o codigo param de funcionar. Nao tem como desfazer.
+      sorteio. O link e o código param de funcionar. Não tem como desfazer.
     </p>
 
     <div class="campo-grupo">
-      <label for="confirma-codigo">Digite o codigo da sala para confirmar</label>
+      <label for="confirma-codigo">Digite o código da sala para confirmar</label>
       <input class="campo" type="text" id="confirma-codigo"
              placeholder="XXXXXX" maxlength="6" autocomplete="off" spellcheck="false"
              style="text-transform:uppercase;letter-spacing:.2em;text-align:center;font-family:'Courier New',monospace;font-size:20px">
@@ -349,13 +271,13 @@
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-reabrir">
     <h3 id="titulo-reabrir">&#8634; Desfazer o sorteio?</h3>
     <p class="ajuda">
-      O resultado atual e jogado fora e a sala volta a aceitar gente nova.
-      Depois voce sorteia de novo, e todo mundo recebe outra pessoa.
+      O resultado atual é jogado fora e a sala volta a aceitar gente nova.
+      Depois você sorteia de novo, e todo mundo recebe outra pessoa.
     </p>
     <div class="aviso ouro">
       <span class="icone">&#128161;</span>
-      <span>So funciona porque <strong>ninguem abriu o resultado ainda</strong>.
-      Assim que a primeira pessoa olhar, esse botao para de valer.</span>
+      <span>Só funciona porque <strong>ninguém abriu o resultado ainda</strong>.
+      Assim que a primeira pessoa olhar, esse botão para de valer.</span>
     </div>
     <div class="btn-linha">
       <button class="btn" id="btn-confirmar-reabrir">Sim, desfazer</button>
@@ -368,7 +290,7 @@
 <div class="cortina" id="modal-dica">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="titulo-modal-dica">
     <h3 id="titulo-modal-dica">Sua dica de presente</h3>
-    <p class="ajuda">So quem te tirar vai ler. Deixe em branco para apagar.</p>
+    <p class="ajuda">Só quem te tirar vai ler. Deixe em branco para apagar.</p>
 
     <div class="campo-grupo">
       <label for="dica-editar">Sua dica</label>
@@ -387,6 +309,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="js/config.js"></script>
 <script src="js/comum.js"></script>
+<script src="js/auth.js"></script>
 <script src="js/sala.js"></script>
 </body>
 </html>
