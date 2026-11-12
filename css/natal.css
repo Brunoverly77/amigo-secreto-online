@@ -37,6 +37,21 @@
 
 * { box-sizing: border-box; }
 
+/* ------------------------------------------ barra de rolagem natalina */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--cereja) transparent;
+}
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--cereja);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--cereja-claro); }
+
 html, body { height: 100%; }
 
 body {
